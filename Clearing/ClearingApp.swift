@@ -1267,14 +1267,61 @@ struct PhotoViewerSheet: View {
 
 // MARK: - Timelapse
 
+struct RangeSlider: View {
+    @Binding var lowerValue: Double
+    @Binding var upperValue: Double
+    let bounds: ClosedRange<Double>
+    var accent: Color = .bodyCoral
+    private let thumbSize: CGFloat = 22
+
+    var body: some View {
+        GeometryReader { geo in
+            let trackWidth = max(0, geo.size.width - thumbSize)
+            let span = bounds.upperBound - bounds.lowerBound
+            let lowerX = span > 0 ? CGFloat((lowerValue - bounds.lowerBound) / span) * trackWidth : 0
+            let upperX = span > 0 ? CGFloat((upperValue - bounds.lowerBound) / span) * trackWidth : trackWidth
+
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.lineC).frame(height: 4)
+                    .offset(x: thumbSize / 2)
+                Capsule().fill(accent).frame(width: max(0, upperX - lowerX), height: 4)
+                    .offset(x: lowerX + thumbSize / 2)
+
+                thumb.offset(x: lowerX)
+                    .gesture(DragGesture().onChanged { value in
+                        guard span > 0 else { return }
+                        let raw = bounds.lowerBound + Double((value.location.x - thumbSize / 2) / trackWidth) * span
+                        lowerValue = min(max(raw.rounded(), bounds.lowerBound), upperValue)
+                    })
+
+                thumb.offset(x: upperX)
+                    .gesture(DragGesture().onChanged { value in
+                        guard span > 0 else { return }
+                        let raw = bounds.lowerBound + Double((value.location.x - thumbSize / 2) / trackWidth) * span
+                        upperValue = max(min(raw.rounded(), bounds.upperBound), lowerValue)
+                    })
+            }
+        }
+    }
+
+    private var thumb: some View {
+        Circle().fill(Color.white)
+            .overlay(Circle().stroke(accent, lineWidth: 3))
+            .frame(width: thumbSize, height: thumbSize)
+            .shadow(color: Color.ink.opacity(0.15), radius: 2, y: 1)
+    }
+}
+
 struct TimelapseView: View {
     @EnvironmentObject var store: AppStore
     let area: PhotoArea
     @Environment(\.dismiss) private var dismiss
 
-    @State private var photos: [ProgressPhoto] = []   // oldest -> newest
+    @State private var photos: [ProgressPhoto] = []   // oldest -> newest, full history
     @State private var images: [UIImage] = []          // parallel to photos
-    @State private var index: Double = 0
+    @State private var rangeStart: Double = 0           // trim handles, indices into photos
+    @State private var rangeEnd: Double = 0
+    @State private var index: Double = 0                // scrub/playback position within the trimmed range
     @State private var isPlaying = false
     @State private var isExporting = false
     @State private var showExportError = false
@@ -1283,12 +1330,21 @@ struct TimelapseView: View {
 
     private let playTimer = Timer.publish(every: 0.6, on: .main, in: .common).autoconnect()
 
+    private var trimStart: Int { photos.isEmpty ? 0 : min(Int(rangeStart.rounded()), photos.count - 1) }
+    private var trimEnd: Int { photos.isEmpty ? 0 : min(Int(rangeEnd.rounded()), photos.count - 1) }
+    private var trimmedPhotos: [ProgressPhoto] { photos.isEmpty ? [] : Array(photos[trimStart...trimEnd]) }
+    private var trimmedImages: [UIImage] { images.isEmpty ? [] : Array(images[trimStart...trimEnd]) }
+
     private var frameIndex: Int {
-        guard !photos.isEmpty else { return 0 }
-        return min(photos.count - 1, max(0, Int(index.rounded())))
+        guard !trimmedPhotos.isEmpty else { return 0 }
+        return min(trimmedPhotos.count - 1, max(0, Int(index.rounded())))
     }
-    private var currentImage: UIImage? { images.indices.contains(frameIndex) ? images[frameIndex] : nil }
-    private var currentPhoto: ProgressPhoto? { photos.indices.contains(frameIndex) ? photos[frameIndex] : nil }
+    private var currentImage: UIImage? { trimmedImages.indices.contains(frameIndex) ? trimmedImages[frameIndex] : nil }
+    private var currentPhoto: ProgressPhoto? { trimmedPhotos.indices.contains(frameIndex) ? trimmedPhotos[frameIndex] : nil }
+    private var rangeLabel: String {
+        guard let first = trimmedPhotos.first, let last = trimmedPhotos.last else { return "" }
+        return "\(trimmedPhotos.count) photos · \(DateKeyFormat.displayString(from: first.dateKey)) – \(DateKeyFormat.displayString(from: last.dateKey))"
+    }
 
     var body: some View {
         ZStack {
@@ -1320,18 +1376,38 @@ struct TimelapseView: View {
                     }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                .frame(maxHeight: 420)
+                .frame(maxHeight: 380)
 
                 if let photo = currentPhoto {
-                    Text("\(DateKeyFormat.displayString(from: photo.dateKey)) · \(frameIndex + 1) of \(photos.count)")
+                    Text("\(DateKeyFormat.displayString(from: photo.dateKey)) · \(frameIndex + 1) of \(trimmedPhotos.count)")
                         .font(.caption.weight(.bold)).foregroundColor(.soft)
                 }
 
                 if photos.count > 1 {
-                    Slider(value: $index, in: 0...Double(photos.count - 1), step: 1) { editing in
+                    Slider(value: $index, in: 0...Double(max(0, trimmedPhotos.count - 1)), step: 1) { editing in
                         if editing { isPlaying = false }
                     }
                     .tint(.bodyCoral)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("TRIM RANGE")
+                                .font(.caption2.weight(.heavy)).foregroundColor(.soft)
+                            Spacer()
+                            Text(rangeLabel)
+                                .font(.caption2).foregroundColor(.faint)
+                        }
+                        RangeSlider(lowerValue: $rangeStart, upperValue: $rangeEnd,
+                                    bounds: 0...Double(photos.count - 1), accent: .bodyCoral)
+                            .frame(height: 26)
+                        HStack(spacing: 8) {
+                            presetChip("All") { applyPreset(days: nil) }
+                            presetChip("Last 7 days") { applyPreset(days: 7) }
+                            presetChip("Last 30 days") { applyPreset(days: 30) }
+                        }
+                    }
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.white))
                 } else {
                     Text("Take at least 2 photos of \(area.title.lowercased()) to build a timelapse.")
                         .font(.caption).foregroundColor(.soft)
@@ -1339,7 +1415,7 @@ struct TimelapseView: View {
 
                 HStack(spacing: 12) {
                     Button {
-                        if frameIndex == photos.count - 1 { index = 0 }
+                        if frameIndex == trimmedPhotos.count - 1 { index = 0 }
                         isPlaying.toggle()
                     } label: {
                         Label(isPlaying ? "Pause" : "Play", systemImage: isPlaying ? "pause.fill" : "play.fill")
@@ -1349,7 +1425,7 @@ struct TimelapseView: View {
                             .padding(.vertical, 12)
                             .background(Capsule().fill(Color.bodyCoral))
                     }
-                    .disabled(photos.count < 2)
+                    .disabled(trimmedPhotos.count < 2)
 
                     Button {
                         exportVideo()
@@ -1361,7 +1437,7 @@ struct TimelapseView: View {
                             .padding(.vertical, 12)
                             .background(Capsule().fill(isExporting ? Color.faint : Color.rose))
                     }
-                    .disabled(photos.count < 2 || isExporting)
+                    .disabled(trimmedPhotos.count < 2 || isExporting)
                 }
 
                 if isExporting {
@@ -1373,10 +1449,12 @@ struct TimelapseView: View {
             .padding(20)
         }
         .onAppear(perform: load)
+        .onChange(of: rangeStart) { _, _ in isPlaying = false; index = 0 }
+        .onChange(of: rangeEnd) { _, _ in isPlaying = false; index = 0 }
         .onReceive(playTimer) { _ in
-            guard isPlaying, photos.count > 1 else { return }
+            guard isPlaying, trimmedPhotos.count > 1 else { return }
             let next = frameIndex + 1
-            index = Double(next > photos.count - 1 ? 0 : next)
+            index = Double(next > trimmedPhotos.count - 1 ? 0 : next)
         }
         .alert("Saved to Photos ♡", isPresented: $showSavedAlert) {
             Button("OK", role: .cancel) {}
@@ -1388,16 +1466,42 @@ struct TimelapseView: View {
         }
     }
 
+    private func presetChip(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(.roseDeep)
+                .padding(.horizontal, 10).padding(.vertical, 5)
+                .background(Capsule().fill(Color.roseTint))
+        }
+    }
+
     private func load() {
         photos = store.photos(for: area.key).sorted { $0.dateKey < $1.dateKey }
         images = photos.compactMap { store.image(for: $0) }
+        rangeStart = 0
+        rangeEnd = Double(max(0, photos.count - 1))
         index = 0
+    }
+
+    private func applyPreset(days: Int?) {
+        guard !photos.isEmpty else { return }
+        guard let days else {
+            rangeStart = 0
+            rangeEnd = Double(photos.count - 1)
+            return
+        }
+        let cutoff = Calendar.current.date(byAdding: .day, value: -(days - 1), to: Calendar.current.startOfDay(for: Date())) ?? .distantPast
+        let cutoffKey = store.dateKey(cutoff)
+        let firstIdx = photos.firstIndex { $0.dateKey >= cutoffKey } ?? 0
+        rangeStart = Double(firstIdx)
+        rangeEnd = Double(photos.count - 1)
     }
 
     private func exportVideo() {
         isPlaying = false
         isExporting = true
-        TimelapseRenderer.export(images: images) { result in
+        TimelapseRenderer.export(images: trimmedImages) { result in
             isExporting = false
             switch result {
             case .success(let url):
