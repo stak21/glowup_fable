@@ -12,6 +12,9 @@ import SwiftUI
 import Combine
 import UserNotifications
 import UIKit
+import AVFoundation
+import CoreVideo
+import Photos
 
 // MARK: - App entry
 
@@ -1080,6 +1083,7 @@ struct PhotosView: View {
     @State private var showCamera = false
     @State private var cameraUnavailable = false
     @State private var viewerPhoto: ProgressPhoto?
+    @State private var showTimelapse = false
 
     private var photosForArea: [ProgressPhoto] { store.photos(for: selectedArea) }
     private var areaTitle: String { PhotoAreas.all.first { $0.key == selectedArea }?.title ?? "" }
@@ -1120,19 +1124,32 @@ struct PhotosView: View {
                         .padding(.vertical, 2)
                     }
 
-                    Button {
-                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
-                            showCamera = true
-                        } else {
-                            cameraUnavailable = true
+                    HStack(spacing: 10) {
+                        Button {
+                            if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                                showCamera = true
+                            } else {
+                                cameraUnavailable = true
+                            }
+                        } label: {
+                            Label(todayHasPhoto ? "Retake today's photo" : "Take today's photo", systemImage: "camera.fill")
+                                .font(.subheadline.weight(.heavy))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 13)
+                                .background(Capsule().fill(Color.bodyCoral))
                         }
-                    } label: {
-                        Label(todayHasPhoto ? "Retake today's photo" : "Take today's photo", systemImage: "camera.fill")
-                            .font(.subheadline.weight(.heavy))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 13)
-                            .background(Capsule().fill(Color.bodyCoral))
+
+                        Button {
+                            showTimelapse = true
+                        } label: {
+                            Image(systemName: "play.rectangle.fill")
+                                .font(.subheadline.weight(.heavy))
+                                .foregroundColor(photosForArea.count < 2 ? .faint : .roseDeep)
+                                .frame(width: 48, height: 48)
+                                .background(Circle().fill(Color.white))
+                        }
+                        .disabled(photosForArea.count < 2)
                     }
 
                     if photosForArea.isEmpty {
@@ -1169,6 +1186,11 @@ struct PhotosView: View {
         }
         .sheet(item: $viewerPhoto) { photo in
             PhotoViewerSheet(photo: photo)
+        }
+        .sheet(isPresented: $showTimelapse) {
+            if let area = PhotoAreas.all.first(where: { $0.key == selectedArea }) {
+                TimelapseView(area: area)
+            }
         }
         .alert("Camera not available", isPresented: $cameraUnavailable) {
             Button("OK", role: .cancel) {}
@@ -1240,6 +1262,301 @@ struct PhotoViewerSheet: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+    }
+}
+
+// MARK: - Timelapse
+
+struct TimelapseView: View {
+    @EnvironmentObject var store: AppStore
+    let area: PhotoArea
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var photos: [ProgressPhoto] = []   // oldest -> newest
+    @State private var images: [UIImage] = []          // parallel to photos
+    @State private var index: Double = 0
+    @State private var isPlaying = false
+    @State private var isExporting = false
+    @State private var showExportError = false
+    @State private var exportErrorMessage = ""
+    @State private var showSavedAlert = false
+
+    private let playTimer = Timer.publish(every: 0.6, on: .main, in: .common).autoconnect()
+
+    private var frameIndex: Int {
+        guard !photos.isEmpty else { return 0 }
+        return min(photos.count - 1, max(0, Int(index.rounded())))
+    }
+    private var currentImage: UIImage? { images.indices.contains(frameIndex) ? images[frameIndex] : nil }
+    private var currentPhoto: ProgressPhoto? { photos.indices.contains(frameIndex) ? photos[frameIndex] : nil }
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [.bgTop, .bgBottom], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+            VStack(spacing: 16) {
+                HStack {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                            .font(.caption.weight(.heavy))
+                            .foregroundColor(.roseDeep)
+                            .frame(width: 30, height: 30)
+                            .background(Circle().fill(Color.roseTint))
+                    }
+                    Spacer()
+                    Text("\(area.emoji) \(area.title) timelapse")
+                        .font(.system(.headline, design: .serif).weight(.semibold))
+                        .foregroundColor(.ink)
+                    Spacer()
+                    Color.clear.frame(width: 30, height: 30)
+                }
+
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20).fill(Color.black)
+                    if let img = currentImage {
+                        Image(uiImage: img).resizable().scaledToFit()
+                    } else {
+                        ProgressView().tint(.white)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .frame(maxHeight: 420)
+
+                if let photo = currentPhoto {
+                    Text("\(DateKeyFormat.displayString(from: photo.dateKey)) · \(frameIndex + 1) of \(photos.count)")
+                        .font(.caption.weight(.bold)).foregroundColor(.soft)
+                }
+
+                if photos.count > 1 {
+                    Slider(value: $index, in: 0...Double(photos.count - 1), step: 1) { editing in
+                        if editing { isPlaying = false }
+                    }
+                    .tint(.bodyCoral)
+                } else {
+                    Text("Take at least 2 photos of \(area.title.lowercased()) to build a timelapse.")
+                        .font(.caption).foregroundColor(.soft)
+                }
+
+                HStack(spacing: 12) {
+                    Button {
+                        if frameIndex == photos.count - 1 { index = 0 }
+                        isPlaying.toggle()
+                    } label: {
+                        Label(isPlaying ? "Pause" : "Play", systemImage: isPlaying ? "pause.fill" : "play.fill")
+                            .font(.subheadline.weight(.heavy))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Capsule().fill(Color.bodyCoral))
+                    }
+                    .disabled(photos.count < 2)
+
+                    Button {
+                        exportVideo()
+                    } label: {
+                        Label(isExporting ? "Exporting…" : "Export", systemImage: "square.and.arrow.up")
+                            .font(.subheadline.weight(.heavy))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Capsule().fill(isExporting ? Color.faint : Color.rose))
+                    }
+                    .disabled(photos.count < 2 || isExporting)
+                }
+
+                if isExporting {
+                    ProgressView().tint(.rose)
+                }
+
+                Spacer()
+            }
+            .padding(20)
+        }
+        .onAppear(perform: load)
+        .onReceive(playTimer) { _ in
+            guard isPlaying, photos.count > 1 else { return }
+            let next = frameIndex + 1
+            index = Double(next > photos.count - 1 ? 0 : next)
+        }
+        .alert("Saved to Photos ♡", isPresented: $showSavedAlert) {
+            Button("OK", role: .cancel) {}
+        }
+        .alert("Export failed", isPresented: $showExportError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(exportErrorMessage)
+        }
+    }
+
+    private func load() {
+        photos = store.photos(for: area.key).sorted { $0.dateKey < $1.dateKey }
+        images = photos.compactMap { store.image(for: $0) }
+        index = 0
+    }
+
+    private func exportVideo() {
+        isPlaying = false
+        isExporting = true
+        TimelapseRenderer.export(images: images) { result in
+            isExporting = false
+            switch result {
+            case .success(let url):
+                saveToPhotos(url)
+            case .failure(let error):
+                exportErrorMessage = error.localizedDescription
+                showExportError = true
+            }
+        }
+    }
+
+    private func saveToPhotos(_ url: URL) {
+        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+            DispatchQueue.main.async {
+                guard status == .authorized || status == .limited else {
+                    exportErrorMessage = "Photos access is needed to save the timelapse. Enable it in Settings → Privacy → Photos."
+                    showExportError = true
+                    try? FileManager.default.removeItem(at: url)
+                    return
+                }
+                PHPhotoLibrary.shared().performChanges({
+                    PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
+                }) { success, error in
+                    DispatchQueue.main.async {
+                        if success {
+                            showSavedAlert = true
+                        } else {
+                            exportErrorMessage = error?.localizedDescription ?? "Could not save the video."
+                            showExportError = true
+                        }
+                        try? FileManager.default.removeItem(at: url)
+                    }
+                }
+            }
+        }
+    }
+}
+
+enum TimelapseRenderer {
+    enum RenderError: LocalizedError {
+        case noImages
+        case writerSetupFailed
+        case writeFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .noImages: return "No photos to render."
+            case .writerSetupFailed: return "Couldn't set up the video writer."
+            case .writeFailed: return "Something went wrong while writing the video."
+            }
+        }
+    }
+
+    nonisolated static func export(images: [UIImage], fps: Int32 = 2, completion: @escaping (Result<URL, Error>) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                let url = try renderSync(images: images, fps: fps)
+                DispatchQueue.main.async { completion(.success(url)) }
+            } catch {
+                DispatchQueue.main.async { completion(.failure(error)) }
+            }
+        }
+    }
+
+    nonisolated private static func renderSync(images: [UIImage], fps: Int32) throws -> URL {
+        guard let first = images.first else { throw RenderError.noImages }
+
+        let maxDim: CGFloat = 1280
+        let scale = min(1, maxDim / max(first.size.width, first.size.height))
+        let rawWidth = Int((first.size.width * scale).rounded())
+        let rawHeight = Int((first.size.height * scale).rounded())
+        let width = max(2, rawWidth - rawWidth % 2)
+        let height = max(2, rawHeight - rawHeight % 2)
+
+        let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("timelapse-\(UUID().uuidString).mp4")
+
+        let writer = try AVAssetWriter(outputURL: outputURL, fileType: .mp4)
+        let outputSettings: [String: Any] = [
+            AVVideoCodecKey: AVVideoCodecType.h264,
+            AVVideoWidthKey: width,
+            AVVideoHeightKey: height,
+        ]
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: outputSettings)
+        input.expectsMediaDataInRealTime = false
+
+        let pixelBufferAttrs: [String: Any] = [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32ARGB,
+            kCVPixelBufferWidthKey as String: width,
+            kCVPixelBufferHeightKey as String: height,
+        ]
+        let adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: input, sourcePixelBufferAttributes: pixelBufferAttrs)
+
+        guard writer.canAdd(input) else { throw RenderError.writerSetupFailed }
+        writer.add(input)
+
+        guard writer.startWriting() else { throw RenderError.writerSetupFailed }
+        writer.startSession(atSourceTime: .zero)
+
+        let frameDuration = CMTime(value: 1, timescale: fps)
+        var frameCount: Int64 = 0
+
+        for image in images {
+            guard let buffer = pixelBuffer(from: image, width: width, height: height) else { continue }
+            while !input.isReadyForMoreMediaData {
+                Thread.sleep(forTimeInterval: 0.01)
+            }
+            let time = CMTimeMultiply(frameDuration, multiplier: Int32(frameCount))
+            adaptor.append(buffer, withPresentationTime: time)
+            frameCount += 1
+        }
+
+        input.markAsFinished()
+        let semaphore = DispatchSemaphore(value: 0)
+        writer.finishWriting { semaphore.signal() }
+        semaphore.wait()
+
+        guard writer.status == .completed else { throw RenderError.writeFailed }
+        return outputURL
+    }
+
+    nonisolated private static func pixelBuffer(from image: UIImage, width: Int, height: Int) -> CVPixelBuffer? {
+        let upright = normalized(image)
+        guard let cgImage = upright.cgImage else { return nil }
+
+        var pixelBuffer: CVPixelBuffer?
+        let attrs: [String: Any] = [
+            kCVPixelBufferCGImageCompatibilityKey as String: true,
+            kCVPixelBufferCGBitmapContextCompatibilityKey as String: true,
+        ]
+        let status = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32ARGB, attrs as CFDictionary, &pixelBuffer)
+        guard status == kCVReturnSuccess, let buffer = pixelBuffer else { return nil }
+
+        CVPixelBufferLockBaseAddress(buffer, [])
+        defer { CVPixelBufferUnlockBaseAddress(buffer, []) }
+
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(data: CVPixelBufferGetBaseAddress(buffer),
+                                      width: width, height: height,
+                                      bitsPerComponent: 8,
+                                      bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
+                                      space: colorSpace,
+                                      bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue) else { return nil }
+
+        context.setFillColor(UIColor.black.cgColor)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+
+        let imgSize = CGSize(width: cgImage.width, height: cgImage.height)
+        let fitScale = min(CGFloat(width) / imgSize.width, CGFloat(height) / imgSize.height)
+        let drawSize = CGSize(width: imgSize.width * fitScale, height: imgSize.height * fitScale)
+        let origin = CGPoint(x: (CGFloat(width) - drawSize.width) / 2, y: (CGFloat(height) - drawSize.height) / 2)
+        context.draw(cgImage, in: CGRect(origin: origin, size: drawSize))
+
+        return buffer
+    }
+
+    nonisolated private static func normalized(_ image: UIImage) -> UIImage {
+        if image.imageOrientation == .up { return image }
+        let renderer = UIGraphicsImageRenderer(size: image.size)
+        return renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: image.size)) }
     }
 }
 
