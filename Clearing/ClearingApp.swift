@@ -507,6 +507,11 @@ final class AppStore: ObservableObject {
         progressPhotos.filter { $0.area == area }.sorted { $0.dateKey > $1.dateKey }
     }
 
+    /// Most recent existing shot for the area, ignoring the day about to be captured — used as an angle-matching overlay.
+    func previousPhoto(for area: String, excluding dateKey: String) -> ProgressPhoto? {
+        photos(for: area).first { $0.dateKey != dateKey }
+    }
+
     func dateKey(_ date: Date) -> String { Self.keyFormatter.string(from: date) }
 
     /// One photo per area per day — retaking today's shot replaces the old one.
@@ -773,7 +778,9 @@ struct SectionCard: View {
             open = true // fresh day, fresh card
         }
         .fullScreenCover(isPresented: $showCamera) {
-            CameraPicker { image in
+            CameraPicker(overlayImage: photoArea.flatMap { area in
+                store.previousPhoto(for: area, excluding: store.dateKey(store.selectedDate)).flatMap(store.image(for:))
+            }) { image in
                 store.savePhoto(image, area: photoArea ?? "routine", date: store.selectedDate)
                 withAnimation(.easeInOut(duration: 0.2)) { open = false }
             }
@@ -1155,7 +1162,7 @@ struct PhotosView: View {
             }
         }
         .fullScreenCover(isPresented: $showCamera) {
-            CameraPicker { image in
+            CameraPicker(overlayImage: store.previousPhoto(for: selectedArea, excluding: store.dateKey(Date())).flatMap(store.image(for:))) { image in
                 store.savePhoto(image, area: selectedArea)
             }
             .ignoresSafeArea()
@@ -1237,6 +1244,7 @@ struct PhotoViewerSheet: View {
 }
 
 struct CameraPicker: UIViewControllerRepresentable {
+    var overlayImage: UIImage? = nil
     var onCapture: (UIImage) -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -1244,6 +1252,15 @@ struct CameraPicker: UIViewControllerRepresentable {
         let picker = UIImagePickerController()
         picker.sourceType = .camera
         picker.delegate = context.coordinator
+        if let overlayImage {
+            let overlay = UIImageView(image: overlayImage)
+            overlay.frame = UIScreen.main.bounds
+            overlay.contentMode = .scaleAspectFit
+            overlay.clipsToBounds = true
+            overlay.alpha = 0.3
+            overlay.isUserInteractionEnabled = false
+            picker.cameraOverlayView = overlay
+        }
         return picker
     }
 
