@@ -1,5 +1,5 @@
 //  ClearingApp.swift
-//  Skincare Ritual — native iOS port of the web tracker
+//  Skincare Ritual — native   port of the web tracker
 //
 //  Setup: create a new Xcode project (iOS App, SwiftUI, name: Clearing),
 //  replace the contents of ClearingApp.swift with this ENTIRE file,
