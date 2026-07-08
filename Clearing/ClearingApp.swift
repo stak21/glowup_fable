@@ -580,18 +580,19 @@ struct TodayView: View {
 
                     SectionCard(title: "Morning ritual", emoji: "☀️", accent: .amGold, tint: .amTint,
                                 subtitle: "Same glow, every day",
-                                steps: Catalog.amSteps, infoProduct: $infoProduct)
+                                steps: Catalog.amSteps, infoProduct: $infoProduct, photoArea: "face")
 
                     if store.isWednesday {
                         SectionCard(title: "Hair removal", emoji: "🪞", accent: .rose, tint: .roseTint,
                                     subtitle: "Do this first, before the evening routine",
                                     steps: Catalog.removalSteps, infoProduct: $infoProduct,
-                                    footer: "Tonight's mustache rules: no steam, no mask, no azelaic on the mustache area. Hyaluronic Concentrate is the only yes. 💋")
+                                    footer: "Tonight's mustache rules: no steam, no mask, no azelaic on the mustache area. Hyaluronic Concentrate is the only yes. 💋",
+                                    photoArea: "removal")
                     }
 
                     SectionCard(title: "Evening ritual", emoji: "🌙", accent: .pmLav, tint: .pmTint,
                                 subtitle: "\(store.plan.emoji) \(store.plan.focus)",
-                                steps: store.plan.steps, infoProduct: $infoProduct)
+                                steps: store.plan.steps, infoProduct: $infoProduct, photoArea: "face")
 
                     bodyCard(area: "bikini", title: "Bikini", emoji: "🌸")
                     bodyCard(area: "armpits", title: "Armpits", emoji: "🫶",
@@ -601,9 +602,7 @@ struct TodayView: View {
 
                     SectionCard(title: "Daily glow habits", emoji: "🍵", accent: .greenC,
                                 tint: Color(hex: 0xEAF3EC), subtitle: nil,
-                                steps: Catalog.habits, infoProduct: $infoProduct)
-
-                    if store.progress >= 1 { completionCard }
+                                steps: Catalog.habits, infoProduct: $infoProduct, photoArea: "habits")
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 30)
@@ -619,23 +618,8 @@ struct TodayView: View {
                     subtitle: subtitle,
                     steps: Catalog.bodySteps(area: area, includeAzelaic: store.azelaicBodyDay),
                     infoProduct: $infoProduct,
-                    footer: store.azelaicBodyDay ? footer : (footer ?? "Azelaic acid rests today — it's back tomorrow ✨"))
-    }
-
-    private var completionCard: some View {
-        VStack(spacing: 6) {
-            Text("🌷").font(.system(size: 32))
-            Text("Ritual complete!")
-                .font(.system(.title3, design: .serif).weight(.semibold))
-                .foregroundColor(.roseDeep)
-            Text("Consistency is the whole secret. Weeks 4–6 is when the magic shows. ♡")
-                .font(.footnote).foregroundColor(.soft)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(20)
-        .background(RoundedRectangle(cornerRadius: 22).fill(Color.white)
-            .shadow(color: Color.rose.opacity(0.12), radius: 10, y: 4))
+                    footer: store.azelaicBodyDay ? footer : (footer ?? "Azelaic acid rests today — it's back tomorrow ✨"),
+                    photoArea: area)
     }
 }
 
@@ -725,9 +709,17 @@ struct SectionCard: View {
     let steps: [RStep]
     @Binding var infoProduct: Product?
     var footer: String? = nil
+    var photoArea: String? = nil
     @State private var open = true
+    @State private var showCamera = false
+    @State private var cameraUnavailable = false
 
     private var doneCount: Int { steps.filter { store.isDone($0.key) }.count }
+    private var isComplete: Bool { !steps.isEmpty && doneCount == steps.count }
+    private var hasPhotoToday: Bool {
+        guard let photoArea else { return false }
+        return store.photos(for: photoArea).contains { $0.dateKey == store.dateKey(store.selectedDate) }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -769,11 +761,56 @@ struct SectionCard: View {
                         .background(RoundedRectangle(cornerRadius: 12).fill(Color.roseTint.opacity(0.7)))
                         .padding(.top, 8)
                 }
+                if let photoArea, isComplete {
+                    completionBanner(photoArea: photoArea)
+                }
             }
         }
         .padding(16)
         .background(RoundedRectangle(cornerRadius: 22).fill(Color.white)
             .shadow(color: Color.rose.opacity(0.10), radius: 9, y: 4))
+        .onChange(of: store.selectedDate) { _, _ in
+            open = true // fresh day, fresh card
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraPicker { image in
+                store.savePhoto(image, area: photoArea ?? "routine", date: store.selectedDate)
+                withAnimation(.easeInOut(duration: 0.2)) { open = false }
+            }
+            .ignoresSafeArea()
+        }
+        .alert("Camera not available", isPresented: $cameraUnavailable) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("This device (or simulator) doesn't have a camera available.")
+        }
+    }
+
+    private func completionBanner(photoArea: String) -> some View {
+        VStack(spacing: 8) {
+            Text("✨ You're glowing!")
+                .font(.subheadline.weight(.bold))
+                .foregroundColor(.roseDeep)
+            Button {
+                if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                    showCamera = true
+                } else {
+                    cameraUnavailable = true
+                }
+            } label: {
+                Label(hasPhotoToday ? "Retake today's photo" : "Take a photo to add to your journey",
+                      systemImage: "camera.fill")
+                    .font(.caption.weight(.heavy))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(Capsule().fill(accent))
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 14).fill(tint))
+        .padding(.top, 8)
     }
 }
 
@@ -1025,6 +1062,8 @@ enum PhotoAreas {
         PhotoArea(key: "chest", title: "Chest", emoji: "💗"),
         PhotoArea(key: "armpits", title: "Armpits", emoji: "🫶"),
         PhotoArea(key: "bikini", title: "Bikini", emoji: "🌸"),
+        PhotoArea(key: "removal", title: "Removal", emoji: "🪞"),
+        PhotoArea(key: "habits", title: "Habits", emoji: "🍵"),
     ]
 }
 
@@ -1054,21 +1093,24 @@ struct PhotosView: View {
                     Text("A private, on-device timeline for each area. Nothing leaves your phone.")
                         .font(.footnote).foregroundColor(.soft)
 
-                    HStack(spacing: 8) {
-                        ForEach(PhotoAreas.all, id: \.key) { area in
-                            let selected = selectedArea == area.key
-                            Button { selectedArea = area.key } label: {
-                                VStack(spacing: 2) {
-                                    Text(area.emoji)
-                                    Text(area.title).font(.caption.weight(.bold))
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(PhotoAreas.all, id: \.key) { area in
+                                let selected = selectedArea == area.key
+                                Button { selectedArea = area.key } label: {
+                                    VStack(spacing: 2) {
+                                        Text(area.emoji)
+                                        Text(area.title).font(.caption.weight(.bold))
+                                    }
+                                    .foregroundColor(selected ? .white : .soft)
+                                    .frame(width: 72)
+                                    .padding(.vertical, 8)
+                                    .background(RoundedRectangle(cornerRadius: 13)
+                                        .fill(selected ? Color.bodyCoral : Color.white.opacity(0.75)))
                                 }
-                                .foregroundColor(selected ? .white : .soft)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                                .background(RoundedRectangle(cornerRadius: 13)
-                                    .fill(selected ? Color.bodyCoral : Color.white.opacity(0.75)))
                             }
                         }
+                        .padding(.vertical, 2)
                     }
 
                     Button {
