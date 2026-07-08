@@ -15,6 +15,7 @@ import UIKit
 import AVFoundation
 import CoreVideo
 import Photos
+import UniformTypeIdentifiers
 
 // MARK: - App entry
 
@@ -405,6 +406,15 @@ final class AppStore: ObservableObject {
         }
     }
     @Published var progressPhotos: [ProgressPhoto] = []
+    @Published var sectionOrder: [String] = [] {
+        didSet {
+            if let data = try? JSONEncoder().encode(sectionOrder) {
+                UserDefaults.standard.set(data, forKey: "sectionOrder")
+            }
+        }
+    }
+
+    static let defaultSectionOrder = ["morning", "removal", "evening", "bikini", "armpits", "chest", "habits"]
 
     private static let keyFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -433,6 +443,14 @@ final class AppStore: ObservableObject {
         if let data = UserDefaults.standard.data(forKey: "progressPhotos"),
            let saved = try? JSONDecoder().decode([ProgressPhoto].self, from: data) {
             progressPhotos = saved
+        }
+        if let data = UserDefaults.standard.data(forKey: "sectionOrder"),
+           let saved = try? JSONDecoder().decode([String].self, from: data) {
+            let valid = saved.filter { Self.defaultSectionOrder.contains($0) }
+            let missing = Self.defaultSectionOrder.filter { !valid.contains($0) }
+            sectionOrder = valid + missing
+        } else {
+            sectionOrder = Self.defaultSectionOrder
         }
     }
 
@@ -594,49 +612,175 @@ struct RootView: View {
 struct TodayView: View {
     @EnvironmentObject var store: AppStore
     @State private var infoProduct: Product?
+    @State private var isReordering = false
+    @State private var draggedKey: String?
     private let heartbeat = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
+
+    private var visibleSectionOrder: [String] {
+        store.sectionOrder.filter { $0 != "removal" || store.isWednesday }
+    }
 
     var body: some View {
         ZStack {
             LinearGradient(colors: [.bgTop, .bgBottom], startPoint: .top, endPoint: .bottom)
                 .ignoresSafeArea()
-            ScrollView {
-                VStack(spacing: 14) {
-                    ProgressHeader()
-                    WeekStrip()
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 14) {
+                        ProgressHeader()
+                        WeekStrip()
+                        sectionIconRow(proxy: proxy)
 
-                    SectionCard(title: "Morning ritual", emoji: "☀️", accent: .amGold, tint: .amTint,
-                                subtitle: "Same glow, every day",
-                                steps: Catalog.amSteps, infoProduct: $infoProduct, photoArea: "face")
-
-                    if store.isWednesday {
-                        SectionCard(title: "Hair removal", emoji: "🪞", accent: .rose, tint: .roseTint,
-                                    subtitle: "Do this first, before the evening routine",
-                                    steps: Catalog.removalSteps, infoProduct: $infoProduct,
-                                    footer: "Tonight's mustache rules: no steam, no mask, no azelaic on the mustache area. Hyaluronic Concentrate is the only yes. 💋",
-                                    photoArea: "removal")
+                        ForEach(visibleSectionOrder, id: \.self) { key in
+                            Group {
+                                if isReordering {
+                                    sectionView(for: key)
+                                        .opacity(draggedKey == key ? 0.4 : 1)
+                                        .onDrag {
+                                            draggedKey = key
+                                            return NSItemProvider(object: key as NSString)
+                                        }
+                                        .onDrop(of: [.text], delegate: SectionDropDelegate(
+                                            item: key,
+                                            draggedKey: $draggedKey,
+                                            reorder: { moveSection($0, over: $1) }))
+                                } else {
+                                    sectionView(for: key)
+                                }
+                            }
+                            .id(key)
+                        }
                     }
-
-                    SectionCard(title: "Evening ritual", emoji: "🌙", accent: .pmLav, tint: .pmTint,
-                                subtitle: "\(store.plan.emoji) \(store.plan.focus)",
-                                steps: store.plan.steps, infoProduct: $infoProduct, photoArea: "face")
-
-                    bodyCard(area: "bikini", title: "Bikini", emoji: "🌸")
-                    bodyCard(area: "armpits", title: "Armpits", emoji: "🫶",
-                             footer: "Rule: niacinamide, pads + azelaic only. Never glycolic, retinal or salicylic here.")
-                    bodyCard(area: "chest", title: "Chest", emoji: "💗",
-                             subtitle: "Bumps are the purge — clears weeks 4–6 💪")
-
-                    SectionCard(title: "Daily glow habits", emoji: "🍵", accent: .greenC,
-                                tint: Color(hex: 0xEAF3EC), subtitle: nil,
-                                steps: Catalog.habits, infoProduct: $infoProduct, photoArea: "habits")
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 30)
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 30)
+                .onDrop(of: [.text], isTargeted: nil) { _ in
+                    draggedKey = nil
+                    return true
+                }
             }
         }
         .onReceive(heartbeat) { _ in store.tick() }
         .sheet(item: $infoProduct) { ProductSheet(product: $0) }
+    }
+
+    private func sectionIconRow(proxy: ScrollViewProxy) -> some View {
+        HStack(spacing: 8) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(visibleSectionOrder, id: \.self) { key in
+                        Button {
+                            withAnimation { proxy.scrollTo(key, anchor: .top) }
+                        } label: {
+                            Text(sectionEmoji(key))
+                                .font(.system(size: 18))
+                                .frame(width: 42, height: 42)
+                                .background(Circle().fill(Color.white.opacity(0.85)))
+                        }
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+            Button {
+                withAnimation {
+                    isReordering.toggle()
+                    draggedKey = nil
+                }
+            } label: {
+                Image(systemName: isReordering ? "checkmark" : "arrow.up.arrow.down")
+                    .font(.subheadline.weight(.heavy))
+                    .foregroundColor(.white)
+                    .frame(width: 42, height: 42)
+                    .background(Circle().fill(isReordering ? Color.greenC : Color.rose))
+            }
+        }
+        .padding(.top, 4)
+    }
+
+    private func moveSection(_ dragged: String, over target: String) {
+        var visible = visibleSectionOrder
+        guard let fromIdx = visible.firstIndex(of: dragged),
+              let toIdx = visible.firstIndex(of: target),
+              fromIdx != toIdx else { return }
+        visible.move(fromOffsets: IndexSet(integer: fromIdx), toOffset: toIdx > fromIdx ? toIdx + 1 : toIdx)
+        withAnimation(.easeInOut(duration: 0.2)) { applyVisibleOrder(visible) }
+    }
+
+    private func applyVisibleOrder(_ visible: [String]) {
+        if store.isWednesday {
+            store.sectionOrder = visible
+        } else {
+            let removalIndex = store.sectionOrder.firstIndex(of: "removal") ?? 1
+            var newOrder = visible
+            newOrder.insert("removal", at: min(removalIndex, newOrder.count))
+            store.sectionOrder = newOrder
+        }
+    }
+
+    private func sectionTitle(_ key: String) -> String {
+        switch key {
+        case "morning": return "Morning ritual"
+        case "removal": return "Hair removal"
+        case "evening": return "Evening ritual"
+        case "bikini": return "Bikini"
+        case "armpits": return "Armpits"
+        case "chest": return "Chest"
+        case "habits": return "Daily glow habits"
+        default: return key
+        }
+    }
+
+    private func sectionEmoji(_ key: String) -> String {
+        switch key {
+        case "morning": return "☀️"
+        case "removal": return "🪞"
+        case "evening": return "🌙"
+        case "bikini": return "🌸"
+        case "armpits": return "🫶"
+        case "chest": return "💗"
+        case "habits": return "🍵"
+        default: return "•"
+        }
+    }
+
+    @ViewBuilder
+    private func sectionView(for key: String) -> some View {
+        switch key {
+        case "morning":
+            SectionCard(title: "Morning ritual", emoji: "☀️", accent: .amGold, tint: .amTint,
+                        subtitle: "Same glow, every day",
+                        steps: Catalog.amSteps, infoProduct: $infoProduct, photoArea: "face",
+                        isReordering: isReordering)
+        case "removal":
+            if store.isWednesday {
+                SectionCard(title: "Hair removal", emoji: "🪞", accent: .rose, tint: .roseTint,
+                            subtitle: "Do this first, before the evening routine",
+                            steps: Catalog.removalSteps, infoProduct: $infoProduct,
+                            footer: "Tonight's mustache rules: no steam, no mask, no azelaic on the mustache area. Hyaluronic Concentrate is the only yes. 💋",
+                            photoArea: "removal",
+                            isReordering: isReordering)
+            }
+        case "evening":
+            SectionCard(title: "Evening ritual", emoji: "🌙", accent: .pmLav, tint: .pmTint,
+                        subtitle: "\(store.plan.emoji) \(store.plan.focus)",
+                        steps: store.plan.steps, infoProduct: $infoProduct, photoArea: "face",
+                        isReordering: isReordering)
+        case "bikini":
+            bodyCard(area: "bikini", title: "Bikini", emoji: "🌸")
+        case "armpits":
+            bodyCard(area: "armpits", title: "Armpits", emoji: "🫶",
+                     footer: "Rule: niacinamide, pads + azelaic only. Never glycolic, retinal or salicylic here.")
+        case "chest":
+            bodyCard(area: "chest", title: "Chest", emoji: "💗",
+                     subtitle: "Bumps are the purge — clears weeks 4–6 💪")
+        case "habits":
+            SectionCard(title: "Daily glow habits", emoji: "🍵", accent: .greenC,
+                        tint: Color(hex: 0xEAF3EC), subtitle: nil,
+                        steps: Catalog.habits, infoProduct: $infoProduct, photoArea: "habits",
+                        isReordering: isReordering)
+        default:
+            EmptyView()
+        }
     }
 
     private func bodyCard(area: String, title: String, emoji: String,
@@ -646,7 +790,28 @@ struct TodayView: View {
                     steps: Catalog.bodySteps(area: area, includeAzelaic: store.azelaicBodyDay),
                     infoProduct: $infoProduct,
                     footer: store.azelaicBodyDay ? footer : (footer ?? "Azelaic acid rests today — it's back tomorrow ✨"),
-                    photoArea: area)
+                    photoArea: area,
+                    isReordering: isReordering)
+    }
+}
+
+struct SectionDropDelegate: DropDelegate {
+    let item: String
+    @Binding var draggedKey: String?
+    let reorder: (String, String) -> Void
+
+    func dropEntered(info: DropInfo) {
+        guard let dragged = draggedKey, dragged != item else { return }
+        reorder(dragged, item)
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggedKey = nil
+        return true
     }
 }
 
@@ -737,6 +902,7 @@ struct SectionCard: View {
     @Binding var infoProduct: Product?
     var footer: String? = nil
     var photoArea: String? = nil
+    var isReordering: Bool = false
     @State private var open = true
     @State private var showCamera = false
     @State private var cameraUnavailable = false
@@ -750,7 +916,10 @@ struct SectionCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Button { withAnimation(.easeInOut(duration: 0.2)) { open.toggle() } } label: {
+            Button {
+                guard !isReordering else { return }
+                withAnimation(.easeInOut(duration: 0.2)) { open.toggle() }
+            } label: {
                 HStack(spacing: 10) {
                     Text(emoji).font(.title3)
                         .frame(width: 38, height: 38)
@@ -764,16 +933,24 @@ struct SectionCard: View {
                         }
                     }
                     Spacer()
-                    Text("\(doneCount)/\(steps.count)")
-                        .font(.caption.weight(.bold)).foregroundColor(accent)
-                    Image(systemName: "chevron.down")
-                        .font(.caption.weight(.bold)).foregroundColor(.faint)
-                        .rotationEffect(.degrees(open ? 180 : 0))
+                    if isReordering {
+                        Image(systemName: "line.3.horizontal")
+                            .font(.body.weight(.semibold))
+                            .foregroundColor(accent)
+                            .frame(width: 38, height: 38)
+                            .background(RoundedRectangle(cornerRadius: 12).fill(tint))
+                    } else {
+                        Text("\(doneCount)/\(steps.count)")
+                            .font(.caption.weight(.bold)).foregroundColor(accent)
+                        Image(systemName: "chevron.down")
+                            .font(.caption.weight(.bold)).foregroundColor(.faint)
+                            .rotationEffect(.degrees(open ? 180 : 0))
+                    }
                 }
             }
             .buttonStyle(.plain)
 
-            if open {
+            if open && !isReordering {
                 VStack(spacing: 0) {
                     ForEach(Array(steps.enumerated()), id: \.element.key) { index, step in
                         StepRowView(step: step, num: index + 1, accent: accent, infoProduct: $infoProduct)
