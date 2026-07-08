@@ -33,12 +33,23 @@ struct ClearingApp: App {
     }
 }
 
+extension Notification.Name {
+    static let openTodayTab = Notification.Name("openTodayTab")
+}
+
 final class NotifDelegate: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotifDelegate()
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.banner, .sound]) // show banners even while app is open
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        NotificationCenter.default.post(name: .openTodayTab, object: nil)
+        completionHandler()
     }
 }
 
@@ -555,18 +566,26 @@ final class AppStore: ObservableObject {
 // MARK: - Root
 
 struct RootView: View {
+    @State private var selectedTab = 0
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             TodayView()
                 .tabItem { Label("Today", systemImage: "checklist") }
+                .tag(0)
             WeekPlanView()
                 .tabItem { Label("Week", systemImage: "calendar") }
+                .tag(1)
             PhotosView()
                 .tabItem { Label("Photos", systemImage: "camera.fill") }
+                .tag(2)
             RemindersView()
                 .tabItem { Label("Reminders", systemImage: "bell.fill") }
+                .tag(3)
         }
         .tint(.roseDeep)
+        .onReceive(NotificationCenter.default.publisher(for: .openTodayTab)) { _ in
+            selectedTab = 0
+        }
     }
 }
 
@@ -1851,6 +1870,9 @@ struct RemindersView: View {
     @State private var newLabel = ""
     @State private var newTime = Calendar.current.date(from: DateComponents(hour: 7, minute: 30)) ?? Date()
     @State private var newDays: Set<Int> = Set(1...7)
+    @State private var editingReminder: Reminder?
+    @State private var deletingReminder: Reminder?
+    @FocusState private var newLabelFocused: Bool
     private let dayLetters = ["S", "M", "T", "W", "T", "F", "S"]
     private let dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
@@ -1863,7 +1885,7 @@ struct RemindersView: View {
                     Text("Your reminders")
                         .font(.system(.title3, design: .serif).weight(.semibold))
                         .foregroundColor(.ink)
-                    Text("These fire as real notifications — lock screen, banners, sounds — even when the app is closed. 💌")
+                    Text("These fire as real notifications — lock screen, banners, sounds — even when the app is closed. Tap a reminder to edit it. 💌")
                         .font(.footnote).foregroundColor(.soft)
 
                     ForEach(store.reminders) { r in
@@ -1880,7 +1902,7 @@ struct RemindersView: View {
                             }
                             Spacer()
                             Button {
-                                store.reminders.removeAll { $0.id == r.id }
+                                deletingReminder = r
                             } label: {
                                 Image(systemName: "xmark")
                                     .font(.caption.weight(.heavy))
@@ -1893,6 +1915,8 @@ struct RemindersView: View {
                         .background(RoundedRectangle(cornerRadius: 18)
                             .fill(Color.white)
                             .shadow(color: Color.rose.opacity(0.09), radius: 7, y: 3))
+                        .contentShape(Rectangle())
+                        .onTapGesture { editingReminder = r }
                     }
 
                     // Add form
@@ -1904,6 +1928,9 @@ struct RemindersView: View {
                                 .labelsHidden()
                             TextField("What for? e.g. Spearmint tea 🍵", text: $newLabel)
                                 .textFieldStyle(.roundedBorder)
+                                .focused($newLabelFocused)
+                                .submitLabel(.done)
+                                .onSubmit { newLabelFocused = false }
                         }
                         HStack(spacing: 5) {
                             ForEach(1...7, id: \.self) { d in
@@ -1923,6 +1950,7 @@ struct RemindersView: View {
                         }
                         Button {
                             guard !newDays.isEmpty else { return }
+                            newLabelFocused = false
                             let comps = Calendar.current.dateComponents([.hour, .minute], from: newTime)
                             let label = newLabel.trimmingCharacters(in: .whitespaces)
                             store.reminders.append(Reminder(
@@ -1951,5 +1979,137 @@ struct RemindersView: View {
                 .padding(16)
             }
         }
+        .onTapGesture { newLabelFocused = false }
+        .sheet(item: $editingReminder) { r in
+            ReminderEditSheet(reminder: r)
+        }
+        .confirmationDialog("Delete this reminder?",
+                            isPresented: Binding(get: { deletingReminder != nil }, set: { if !$0 { deletingReminder = nil } }),
+                            titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                if let r = deletingReminder {
+                    store.reminders.removeAll { $0.id == r.id }
+                }
+                deletingReminder = nil
+            }
+            Button("Cancel", role: .cancel) { deletingReminder = nil }
+        }
+    }
+}
+
+struct ReminderEditSheet: View {
+    @EnvironmentObject var store: AppStore
+    let reminder: Reminder
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var label: String
+    @State private var time: Date
+    @State private var days: Set<Int>
+    @State private var confirmDelete = false
+    @FocusState private var labelFocused: Bool
+    private let dayLetters = ["S", "M", "T", "W", "T", "F", "S"]
+
+    init(reminder: Reminder) {
+        self.reminder = reminder
+        _label = State(initialValue: reminder.label)
+        _time = State(initialValue: Calendar.current.date(from: DateComponents(hour: reminder.hour, minute: reminder.minute)) ?? Date())
+        _days = State(initialValue: reminder.days)
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("Edit reminder")
+                        .font(.system(.title2, design: .serif).weight(.semibold))
+                        .foregroundColor(.ink)
+                    Spacer()
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                            .font(.caption.weight(.heavy))
+                            .foregroundColor(.roseDeep)
+                            .frame(width: 30, height: 30)
+                            .background(Circle().fill(Color.roseTint))
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    DatePicker("", selection: $time, displayedComponents: .hourAndMinute)
+                        .labelsHidden()
+                    TextField("What for?", text: $label)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($labelFocused)
+                        .submitLabel(.done)
+                        .onSubmit { labelFocused = false }
+                }
+
+                HStack(spacing: 5) {
+                    ForEach(1...7, id: \.self) { d in
+                        let on = days.contains(d)
+                        Button {
+                            if on { days.remove(d) } else { days.insert(d) }
+                        } label: {
+                            Text(dayLetters[d - 1])
+                                .font(.caption.weight(.heavy))
+                                .foregroundColor(on ? .white : .soft)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(RoundedRectangle(cornerRadius: 10)
+                                    .fill(on ? Color.rose : Color.roseTint))
+                        }
+                    }
+                }
+
+                Button {
+                    save()
+                } label: {
+                    Text("Save changes ♡")
+                        .font(.subheadline.weight(.heavy))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(Capsule().fill(days.isEmpty ? Color.faint : Color.rose))
+                }
+                .disabled(days.isEmpty)
+
+                Button(role: .destructive) {
+                    confirmDelete = true
+                } label: {
+                    Text("Delete reminder")
+                        .font(.subheadline.weight(.heavy))
+                        .foregroundColor(.roseDeep)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(Capsule().fill(Color.roseTint))
+                }
+            }
+            .padding(24)
+        }
+        .onTapGesture { labelFocused = false }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        .confirmationDialog("Delete this reminder?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                store.reminders.removeAll { $0.id == reminder.id }
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    private func save() {
+        guard !days.isEmpty else { return }
+        labelFocused = false
+        let comps = Calendar.current.dateComponents([.hour, .minute], from: time)
+        let trimmed = label.trimmingCharacters(in: .whitespaces)
+        var updated = reminder
+        updated.label = trimmed.isEmpty ? "Skincare time ♡" : trimmed
+        updated.hour = comps.hour ?? 8
+        updated.minute = comps.minute ?? 0
+        updated.days = days
+        if let idx = store.reminders.firstIndex(where: { $0.id == reminder.id }) {
+            store.reminders[idx] = updated
+        }
+        dismiss()
     }
 }
