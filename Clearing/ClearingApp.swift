@@ -1084,6 +1084,7 @@ struct PhotosView: View {
     @State private var cameraUnavailable = false
     @State private var viewerPhoto: ProgressPhoto?
     @State private var showTimelapse = false
+    @State private var showDemo = false
 
     private var photosForArea: [ProgressPhoto] { store.photos(for: selectedArea) }
     private var areaTitle: String { PhotoAreas.all.first { $0.key == selectedArea }?.title ?? "" }
@@ -1153,13 +1154,21 @@ struct PhotosView: View {
                     }
 
                     if photosForArea.isEmpty {
-                        VStack(spacing: 6) {
+                        VStack(spacing: 10) {
                             Text("📸").font(.system(size: 32))
                             Text("No photos yet for \(areaTitle)")
                                 .font(.subheadline.weight(.semibold)).foregroundColor(.ink)
                             Text("Take your first daily photo to start tracking progress.")
                                 .font(.caption).foregroundColor(.soft)
                                 .multilineTextAlignment(.center)
+                            Button { showDemo = true } label: {
+                                Label("See how the timelapse works", systemImage: "play.circle.fill")
+                                    .font(.caption.weight(.heavy))
+                                    .foregroundColor(.roseDeep)
+                                    .padding(.horizontal, 12).padding(.vertical, 7)
+                                    .background(Capsule().fill(Color.roseTint))
+                            }
+                            .padding(.top, 2)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(24)
@@ -1190,6 +1199,11 @@ struct PhotosView: View {
         .sheet(isPresented: $showTimelapse) {
             if let area = PhotoAreas.all.first(where: { $0.key == selectedArea }) {
                 TimelapseView(area: area)
+            }
+        }
+        .sheet(isPresented: $showDemo) {
+            if let area = PhotoAreas.all.first(where: { $0.key == selectedArea }) {
+                DemoTimelapseView(area: area)
             }
         }
         .alert("Camera not available", isPresented: $cameraUnavailable) {
@@ -1312,6 +1326,122 @@ struct RangeSlider: View {
     }
 }
 
+enum TimelapseSpeed {
+    /// Scales flip speed to photo count so playback stays roughly this many seconds long,
+    /// without ever flickering too fast or crawling too slow.
+    static func interval(forFrameCount count: Int, targetDuration: Double = 6.0,
+                         minInterval: Double = 0.12, maxInterval: Double = 0.6) -> Double {
+        guard count > 1 else { return maxInterval }
+        return min(max(targetDuration / Double(count), minInterval), maxInterval)
+    }
+}
+
+struct DemoTimelapseView: View {
+    let area: PhotoArea
+    @Environment(\.dismiss) private var dismiss
+
+    private let frameCount = 30
+    @State private var index: Double = 0
+    @State private var isPlaying = true
+
+    private let playTimer = Timer.publish(every: TimelapseSpeed.interval(forFrameCount: 30), on: .main, in: .common).autoconnect()
+
+    private var frameIndex: Int { min(frameCount - 1, max(0, Int(index.rounded()))) }
+    private var progress: Double { Double(frameIndex) / Double(frameCount - 1) }
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [.bgTop, .bgBottom], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+            VStack(spacing: 16) {
+                HStack {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                            .font(.caption.weight(.heavy))
+                            .foregroundColor(.roseDeep)
+                            .frame(width: 30, height: 30)
+                            .background(Circle().fill(Color.roseTint))
+                    }
+                    Spacer()
+                    Text("Example timelapse")
+                        .font(.system(.headline, design: .serif).weight(.semibold))
+                        .foregroundColor(.ink)
+                    Spacer()
+                    Color.clear.frame(width: 30, height: 30)
+                }
+
+                Text("Illustrated example — once you've taken a few \(area.title.lowercased()) photos, your real timeline will scrub and play just like this.")
+                    .font(.caption).foregroundColor(.soft)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 8)
+
+                DemoFrameView(progress: progress)
+                    .frame(maxHeight: 320)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+
+                Text("Day \(frameIndex + 1) of \(frameCount) · example")
+                    .font(.caption.weight(.bold)).foregroundColor(.soft)
+
+                Slider(value: $index, in: 0...Double(frameCount - 1), step: 1) { editing in
+                    if editing { isPlaying = false }
+                }
+                .tint(.bodyCoral)
+
+                Button {
+                    if frameIndex == frameCount - 1 { index = 0 }
+                    isPlaying.toggle()
+                } label: {
+                    Label(isPlaying ? "Pause" : "Play", systemImage: isPlaying ? "pause.fill" : "play.fill")
+                        .font(.subheadline.weight(.heavy))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Capsule().fill(Color.bodyCoral))
+                }
+
+                Spacer()
+            }
+            .padding(20)
+        }
+        .onReceive(playTimer) { _ in
+            guard isPlaying else { return }
+            let next = frameIndex + 1
+            index = Double(next > frameCount - 1 ? 0 : next)
+        }
+    }
+}
+
+struct DemoFrameView: View {
+    let progress: Double   // 0...1
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [
+                Color(hex: 0xE7D3DC),
+                Color.rose.opacity(0.55 + progress * 0.35),
+                Color.amGold.opacity(0.25 + progress * 0.35),
+            ], startPoint: .topLeading, endPoint: .bottomTrailing)
+
+            Circle()
+                .stroke(Color.white.opacity(0.5), lineWidth: 7)
+                .frame(width: 140, height: 140)
+            Circle()
+                .trim(from: 0, to: 0.3 + progress * 0.7)
+                .stroke(Color.white, style: StrokeStyle(lineWidth: 7, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .frame(width: 140, height: 140)
+                .animation(.easeInOut(duration: 0.4), value: progress)
+
+            VStack(spacing: 4) {
+                Text("✨").font(.system(size: 30)).opacity(0.35 + progress * 0.65)
+                Text("\(Int(progress * 100))% glow")
+                    .font(.system(.subheadline, design: .serif).weight(.bold))
+                    .foregroundColor(.white)
+            }
+        }
+    }
+}
+
 struct TimelapseView: View {
     @EnvironmentObject var store: AppStore
     let area: PhotoArea
@@ -1327,8 +1457,12 @@ struct TimelapseView: View {
     @State private var showExportError = false
     @State private var exportErrorMessage = ""
     @State private var showSavedAlert = false
+    @State private var elapsedSincePlay: TimeInterval = 0
 
-    private let playTimer = Timer.publish(every: 0.6, on: .main, in: .common).autoconnect()
+    // Fast fixed tick; actual advance rate adapts to trimmedPhotos.count via elapsedSincePlay,
+    // so speed stays correct even as the trim range changes live.
+    private let heartbeat = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
+    private var playInterval: Double { TimelapseSpeed.interval(forFrameCount: trimmedPhotos.count) }
 
     private var trimStart: Int { photos.isEmpty ? 0 : min(Int(rangeStart.rounded()), photos.count - 1) }
     private var trimEnd: Int { photos.isEmpty ? 0 : min(Int(rangeEnd.rounded()), photos.count - 1) }
@@ -1449,10 +1583,13 @@ struct TimelapseView: View {
             .padding(20)
         }
         .onAppear(perform: load)
-        .onChange(of: rangeStart) { _, _ in isPlaying = false; index = 0 }
-        .onChange(of: rangeEnd) { _, _ in isPlaying = false; index = 0 }
-        .onReceive(playTimer) { _ in
+        .onChange(of: rangeStart) { _, _ in isPlaying = false; index = 0; elapsedSincePlay = 0 }
+        .onChange(of: rangeEnd) { _, _ in isPlaying = false; index = 0; elapsedSincePlay = 0 }
+        .onReceive(heartbeat) { _ in
             guard isPlaying, trimmedPhotos.count > 1 else { return }
+            elapsedSincePlay += 0.05
+            guard elapsedSincePlay >= playInterval else { return }
+            elapsedSincePlay = 0
             let next = frameIndex + 1
             index = Double(next > trimmedPhotos.count - 1 ? 0 : next)
         }
