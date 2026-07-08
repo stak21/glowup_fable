@@ -107,6 +107,30 @@ struct RunningTimer {
     let label: String
 }
 
+struct ProgressPhoto: Identifiable, Codable, Equatable {
+    var id = UUID()
+    let area: String        // "face" | "chest" | "armpits" | "bikini"
+    let dateKey: String     // yyyy-MM-dd
+    let filename: String    // file on disk in the ProgressPhotos folder
+}
+
+enum DateKeyFormat {
+    static let key: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+    static let display: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d"
+        return f
+    }()
+    static func displayString(from dateKey: String) -> String {
+        guard let d = key.date(from: dateKey) else { return dateKey }
+        return display.string(from: d)
+    }
+}
+
 // MARK: - Catalog (products + full Week 3 schedule from the PDF)
 
 enum Catalog {
@@ -366,11 +390,19 @@ final class AppStore: ObservableObject {
             NotificationManager.sync(reminders)
         }
     }
+    @Published var progressPhotos: [ProgressPhoto] = []
 
     private static let keyFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         return f
+    }()
+
+    private static let photosDirectory: URL = {
+        let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("ProgressPhotos", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
     }()
 
     init() {
@@ -383,6 +415,10 @@ final class AppStore: ObservableObject {
                 Reminder(label: "☀️ Morning ritual time", hour: 7, minute: 30, days: Set(1...7)),
                 Reminder(label: "🌙 Evening ritual time", hour: 21, minute: 30, days: Set(1...7)),
             ]
+        }
+        if let data = UserDefaults.standard.data(forKey: "progressPhotos"),
+           let saved = try? JSONDecoder().decode([ProgressPhoto].self, from: data) {
+            progressPhotos = saved
         }
     }
 
@@ -464,6 +500,48 @@ final class AppStore: ObservableObject {
     }
     var doneCount: Int { allKeys.filter { isDone($0) }.count }
     var progress: Double { allKeys.isEmpty ? 0 : Double(doneCount) / Double(allKeys.count) }
+
+    // MARK: Progress photos
+
+    func photos(for area: String) -> [ProgressPhoto] {
+        progressPhotos.filter { $0.area == area }.sorted { $0.dateKey > $1.dateKey }
+    }
+
+    func dateKey(_ date: Date) -> String { Self.keyFormatter.string(from: date) }
+
+    /// One photo per area per day — retaking today's shot replaces the old one.
+    func savePhoto(_ image: UIImage, area: String, date: Date = Date()) {
+        guard let data = image.jpegData(compressionQuality: 0.85) else { return }
+        let key = dateKey(date)
+        if let existing = progressPhotos.first(where: { $0.area == area && $0.dateKey == key }) {
+            deletePhoto(existing)
+        }
+        let filename = "\(area)-\(key)-\(UUID().uuidString).jpg"
+        let url = Self.photosDirectory.appendingPathComponent(filename)
+        do {
+            try data.write(to: url)
+        } catch {
+            return
+        }
+        progressPhotos.append(ProgressPhoto(area: area, dateKey: key, filename: filename))
+        savePhotosIndex()
+    }
+
+    func deletePhoto(_ photo: ProgressPhoto) {
+        try? FileManager.default.removeItem(at: Self.photosDirectory.appendingPathComponent(photo.filename))
+        progressPhotos.removeAll { $0.id == photo.id }
+        savePhotosIndex()
+    }
+
+    func image(for photo: ProgressPhoto) -> UIImage? {
+        UIImage(contentsOfFile: Self.photosDirectory.appendingPathComponent(photo.filename).path)
+    }
+
+    private func savePhotosIndex() {
+        if let data = try? JSONEncoder().encode(progressPhotos) {
+            UserDefaults.standard.set(data, forKey: "progressPhotos")
+        }
+    }
 }
 
 // MARK: - Root
@@ -475,6 +553,8 @@ struct RootView: View {
                 .tabItem { Label("Today", systemImage: "checklist") }
             WeekPlanView()
                 .tabItem { Label("Week", systemImage: "calendar") }
+            PhotosView()
+                .tabItem { Label("Photos", systemImage: "camera.fill") }
             RemindersView()
                 .tabItem { Label("Reminders", systemImage: "bell.fill") }
         }
@@ -927,6 +1007,222 @@ struct WeekPlanView: View {
                 }
                 .padding(16)
             }
+        }
+    }
+}
+
+// MARK: - Progress photos
+
+struct PhotoArea {
+    let key: String
+    let title: String
+    let emoji: String
+}
+
+enum PhotoAreas {
+    static let all: [PhotoArea] = [
+        PhotoArea(key: "face", title: "Face", emoji: "🌷"),
+        PhotoArea(key: "chest", title: "Chest", emoji: "💗"),
+        PhotoArea(key: "armpits", title: "Armpits", emoji: "🫶"),
+        PhotoArea(key: "bikini", title: "Bikini", emoji: "🌸"),
+    ]
+}
+
+struct PhotosView: View {
+    @EnvironmentObject var store: AppStore
+    @State private var selectedArea = "face"
+    @State private var showCamera = false
+    @State private var cameraUnavailable = false
+    @State private var viewerPhoto: ProgressPhoto?
+
+    private var photosForArea: [ProgressPhoto] { store.photos(for: selectedArea) }
+    private var areaTitle: String { PhotoAreas.all.first { $0.key == selectedArea }?.title ?? "" }
+    private var todayHasPhoto: Bool {
+        photosForArea.contains { $0.dateKey == store.dateKey(Date()) }
+    }
+    private let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [.bgTop, .bgBottom], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Progress photos")
+                        .font(.system(.title3, design: .serif).weight(.semibold))
+                        .foregroundColor(.ink)
+                    Text("A private, on-device timeline for each area. Nothing leaves your phone.")
+                        .font(.footnote).foregroundColor(.soft)
+
+                    HStack(spacing: 8) {
+                        ForEach(PhotoAreas.all, id: \.key) { area in
+                            let selected = selectedArea == area.key
+                            Button { selectedArea = area.key } label: {
+                                VStack(spacing: 2) {
+                                    Text(area.emoji)
+                                    Text(area.title).font(.caption.weight(.bold))
+                                }
+                                .foregroundColor(selected ? .white : .soft)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(RoundedRectangle(cornerRadius: 13)
+                                    .fill(selected ? Color.bodyCoral : Color.white.opacity(0.75)))
+                            }
+                        }
+                    }
+
+                    Button {
+                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                            showCamera = true
+                        } else {
+                            cameraUnavailable = true
+                        }
+                    } label: {
+                        Label(todayHasPhoto ? "Retake today's photo" : "Take today's photo", systemImage: "camera.fill")
+                            .font(.subheadline.weight(.heavy))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .background(Capsule().fill(Color.bodyCoral))
+                    }
+
+                    if photosForArea.isEmpty {
+                        VStack(spacing: 6) {
+                            Text("📸").font(.system(size: 32))
+                            Text("No photos yet for \(areaTitle)")
+                                .font(.subheadline.weight(.semibold)).foregroundColor(.ink)
+                            Text("Take your first daily photo to start tracking progress.")
+                                .font(.caption).foregroundColor(.soft)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(24)
+                        .background(RoundedRectangle(cornerRadius: 20).fill(Color.white))
+                    } else {
+                        LazyVGrid(columns: columns, spacing: 8) {
+                            ForEach(photosForArea) { photo in
+                                Button { viewerPhoto = photo } label: {
+                                    PhotoThumb(photo: photo)
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(16)
+                .padding(.bottom, 30)
+            }
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraPicker { image in
+                store.savePhoto(image, area: selectedArea)
+            }
+            .ignoresSafeArea()
+        }
+        .sheet(item: $viewerPhoto) { photo in
+            PhotoViewerSheet(photo: photo)
+        }
+        .alert("Camera not available", isPresented: $cameraUnavailable) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("This device (or simulator) doesn't have a camera available.")
+        }
+    }
+}
+
+struct PhotoThumb: View {
+    @EnvironmentObject var store: AppStore
+    let photo: ProgressPhoto
+
+    var body: some View {
+        ZStack(alignment: .bottomLeading) {
+            if let img = store.image(for: photo) {
+                Image(uiImage: img).resizable().scaledToFill()
+            } else {
+                Color.roseTint
+            }
+            Text(DateKeyFormat.displayString(from: photo.dateKey))
+                .font(.system(size: 9, weight: .heavy))
+                .foregroundColor(.white)
+                .padding(.horizontal, 6).padding(.vertical, 3)
+                .background(Color.black.opacity(0.45))
+                .clipShape(Capsule())
+                .padding(5)
+        }
+        .frame(height: 110)
+        .frame(maxWidth: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .contentShape(RoundedRectangle(cornerRadius: 14))
+    }
+}
+
+struct PhotoViewerSheet: View {
+    @EnvironmentObject var store: AppStore
+    let photo: ProgressPhoto
+    @Environment(\.dismiss) private var dismiss
+    @State private var confirmDelete = false
+
+    var body: some View {
+        VStack(spacing: 16) {
+            if let img = store.image(for: photo) {
+                Image(uiImage: img).resizable().scaledToFit()
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
+            }
+            Text(DateKeyFormat.displayString(from: photo.dateKey))
+                .font(.system(.headline, design: .serif).weight(.semibold))
+                .foregroundColor(.ink)
+            Button(role: .destructive) {
+                confirmDelete = true
+            } label: {
+                Label("Delete photo", systemImage: "trash")
+                    .font(.subheadline.weight(.heavy))
+                    .foregroundColor(.roseDeep)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Capsule().fill(Color.roseTint))
+            }
+            Spacer()
+        }
+        .padding(24)
+        .presentationDetents([.large])
+        .confirmationDialog("Delete this photo?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                store.deletePhoto(photo)
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+}
+
+struct CameraPicker: UIViewControllerRepresentable {
+    var onCapture: (UIImage) -> Void
+    @Environment(\.dismiss) private var dismiss
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        let parent: CameraPicker
+        init(_ parent: CameraPicker) { self.parent = parent }
+
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage {
+                parent.onCapture(image)
+            }
+            parent.dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.dismiss()
         }
     }
 }
