@@ -26,6 +26,7 @@ struct ClearingApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(store)
+                .preferredColorScheme(.light) // palette is hard-coded light; keeps system controls (drag handles etc.) visible
                 .onAppear {
                     UNUserNotificationCenter.current().delegate = NotifDelegate.shared
                     NotificationManager.requestPermission()
