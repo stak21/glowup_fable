@@ -50,6 +50,31 @@ enum RoutineTheme: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum RoutinePlacement {
+    /// Index for a new step of `category`: after the last step whose category
+    /// rank ≤ the new one; uncategorized steps stay anchored where the user put them.
+    static func insertionIndex(for category: StepCategory?, in steps: [RStep]) -> Int {
+        guard let rank = category?.sortRank else { return steps.count }
+        var index: Int? = nil
+        for (i, existing) in steps.enumerated() {
+            if let existingRank = existing.category?.sortRank, existingRank <= rank {
+                index = i + 1
+            }
+        }
+        if let index { return index }
+        // No earlier-or-equal anchor: go before the categorized steps if any exist, else append.
+        return steps.contains { $0.category != nil } ? 0 : steps.count
+    }
+
+    /// Core categories a routine is expected to cover — drives placeholder slots.
+    static let coreCategories: [StepCategory] = [.cleanser, .treatment, .moisturizer, .spf]
+
+    static func missingCoreCategories(in steps: [RStep]) -> [StepCategory] {
+        let present = Set(steps.compactMap(\.category))
+        return coreCategories.filter { !present.contains($0) }
+    }
+}
+
 struct Routine: Identifiable, Codable, Equatable {
     var id: String                  // migrated: "morning", "evening-mon"…; new: UUID string
     var title: String

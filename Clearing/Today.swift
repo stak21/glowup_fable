@@ -42,6 +42,8 @@ struct TodayView: View {
     @State private var infoProduct: Product?
     @State private var isReordering = false
     @State private var draggedKey: String?
+    @State private var showManager = false
+    @State private var editingRoutine: Routine?
     private let heartbeat = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -86,6 +88,8 @@ struct TodayView: View {
         }
         .onReceive(heartbeat) { _ in store.tick() }
         .sheet(item: $infoProduct) { ProductSheet(product: $0) }
+        .sheet(isPresented: $showManager) { RoutineManagerSheet() }
+        .sheet(item: $editingRoutine) { RoutineEditorSheet(routine: $0, isNew: false) }
     }
 
     private func sectionIconRow(proxy: ScrollViewProxy) -> some View {
@@ -117,6 +121,15 @@ struct TodayView: View {
                     .frame(width: 42, height: 42)
                     .background(Circle().fill(isReordering ? Color.greenC : Color.rose))
             }
+            Button {
+                showManager = true
+            } label: {
+                Image(systemName: "pencil")
+                    .font(.subheadline.weight(.heavy))
+                    .foregroundColor(.roseDeep)
+                    .frame(width: 42, height: 42)
+                    .background(Circle().fill(Color.white.opacity(0.85)))
+            }
         }
         .padding(.top, 4)
     }
@@ -129,7 +142,8 @@ struct TodayView: View {
                     infoProduct: $infoProduct,
                     footer: dynamicFooter(for: routine),
                     photoArea: routine.photoArea,
-                    isReordering: isReordering)
+                    isReordering: isReordering,
+                    onEdit: { editingRoutine = routine })
     }
 
     /// A routine's own footer wins; otherwise routines with a resting
@@ -251,6 +265,7 @@ struct SectionCard: View {
     var footer: String? = nil
     var photoArea: String? = nil
     var isReordering: Bool = false
+    var onEdit: (() -> Void)? = nil
     @State private var open = true
     @State private var showCamera = false
     @State private var cameraUnavailable = false
@@ -305,6 +320,24 @@ struct SectionCard: View {
                     }
                 }
                 .padding(.top, 4)
+                if steps.isEmpty, let onEdit {
+                    Button(action: onEdit) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus.circle.dashed")
+                            Text("Add your products")
+                                .font(.footnote.weight(.semibold))
+                            Spacer()
+                        }
+                        .foregroundColor(.soft)
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .strokeBorder(Color.faint, style: StrokeStyle(lineWidth: 1, dash: [5]))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 8)
+                }
                 if let footer {
                     Text(footer)
                         .font(.caption).foregroundColor(.roseDeep)

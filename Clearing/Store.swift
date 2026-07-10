@@ -214,9 +214,16 @@ final class AppStore: ObservableObject {
         let step = RStep(key: "st-" + UUID().uuidString.prefix(8).lowercased(),
                          productID: productID, category: category)
         var steps = routines[idx].steps
-        steps.insert(step, at: insertionIndex(for: category, in: steps))
+        steps.insert(step, at: RoutinePlacement.insertionIndex(for: category, in: steps))
         routines[idx].steps = steps
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+
+    /// Reorders the full routine list (manager sheet — includes off-day routines).
+    func moveRoutine(_ draggedID: String, over targetID: String) {
+        guard let from = routines.firstIndex(where: { $0.id == draggedID }),
+              let to = routines.firstIndex(where: { $0.id == targetID }), from != to else { return }
+        routines.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
     }
 
     func removeStep(key: String, from routineID: String) {
@@ -227,21 +234,6 @@ final class AppStore: ObservableObject {
     func moveStep(in routineID: String, from source: IndexSet, to destination: Int) {
         guard let idx = routines.firstIndex(where: { $0.id == routineID }) else { return }
         routines[idx].steps.move(fromOffsets: source, toOffset: destination)
-    }
-
-    /// Insert after the last step whose category rank ≤ the new one; steps without
-    /// a category stay anchored where the user put them.
-    private func insertionIndex(for category: StepCategory?, in steps: [RStep]) -> Int {
-        guard let rank = category?.sortRank else { return steps.count }
-        var index: Int? = nil
-        for (i, existing) in steps.enumerated() {
-            if let existingRank = existing.category?.sortRank, existingRank <= rank {
-                index = i + 1
-            }
-        }
-        if let index { return index }
-        // No earlier-or-equal anchor: go before the categorized steps if any exist, else append.
-        return steps.contains { $0.category != nil } ? 0 : steps.count
     }
 
     /// If an edit makes two same-day routines share a step key, re-key the edited one's clashes.
