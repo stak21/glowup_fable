@@ -13,6 +13,7 @@ import Combine
 import UserNotifications
 import UIKit
 import AVFoundation
+import AudioToolbox
 import CoreVideo
 import Photos
 import UniformTypeIdentifiers
@@ -44,7 +45,11 @@ final class NotifDelegate: NSObject, UNUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: UNUserNotificationCenter,
                                 willPresent notification: UNNotification,
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.banner, .sound]) // show banners even while app is open
+        if notification.request.identifier.hasPrefix("timer-") {
+            completionHandler([]) // in-app: the heartbeat plays its own completion chime
+        } else {
+            completionHandler([.banner, .sound]) // show banners even while app is open
+        }
     }
 
     func userNotificationCenter(_ center: UNUserNotificationCenter,
@@ -367,25 +372,52 @@ enum NotificationManager {
 
     static func sync(_ reminders: [Reminder]) {
         let center = UNUserNotificationCenter.current()
-        center.removeAllPendingNotificationRequests()
-        for r in reminders {
-            let content = UNMutableNotificationContent()
-            content.title = "Skincare Ritual ♡"
-            content.body = r.label
-            content.sound = .default
-            if r.days.count == 7 {
-                var dc = DateComponents()
-                dc.hour = r.hour; dc.minute = r.minute
-                let trigger = UNCalendarNotificationTrigger(dateMatching: dc, repeats: true)
-                center.add(UNNotificationRequest(identifier: r.id.uuidString, content: content, trigger: trigger))
-            } else {
-                for d in r.days {
+        center.getPendingNotificationRequests { existing in
+            // Replace only reminder schedules — leave running step-timer notifications alone.
+            let stale = existing.map(\.identifier).filter { !$0.hasPrefix("timer-") }
+            center.removePendingNotificationRequests(withIdentifiers: stale)
+            for r in reminders {
+                let content = UNMutableNotificationContent()
+                content.title = "Skincare Ritual ♡"
+                content.body = r.label
+                content.sound = .default
+                if r.days.count == 7 {
                     var dc = DateComponents()
-                    dc.hour = r.hour; dc.minute = r.minute; dc.weekday = d
+                    dc.hour = r.hour; dc.minute = r.minute
                     let trigger = UNCalendarNotificationTrigger(dateMatching: dc, repeats: true)
-                    center.add(UNNotificationRequest(identifier: "\(r.id.uuidString)-\(d)", content: content, trigger: trigger))
+                    center.add(UNNotificationRequest(identifier: r.id.uuidString, content: content, trigger: trigger))
+                } else {
+                    for d in r.days {
+                        var dc = DateComponents()
+                        dc.hour = r.hour; dc.minute = r.minute; dc.weekday = d
+                        let trigger = UNCalendarNotificationTrigger(dateMatching: dc, repeats: true)
+                        center.add(UNNotificationRequest(identifier: "\(r.id.uuidString)-\(d)", content: content, trigger: trigger))
+                    }
                 }
             }
+        }
+    }
+
+    // MARK: Step timers
+
+    static func scheduleTimerDone(key: String, label: String, end: Date) {
+        let content = UNMutableNotificationContent()
+        content.title = "⏳ \(label) — time's up!"
+        content.body = "Ready for your next step ♡"
+        content.sound = .default
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: max(1, end.timeIntervalSinceNow), repeats: false)
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "timer-\(key)", content: content, trigger: trigger))
+    }
+
+    static func cancelTimerDone(key: String) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["timer-\(key)"])
+    }
+
+    static func cancelAllTimerDone() {
+        let center = UNUserNotificationCenter.current()
+        center.getPendingNotificationRequests { existing in
+            let ids = existing.map(\.identifier).filter { $0.hasPrefix("timer-") }
+            center.removePendingNotificationRequests(withIdentifiers: ids)
         }
     }
 }
@@ -394,7 +426,7 @@ enum NotificationManager {
 
 final class AppStore: ObservableObject {
     @Published var selectedDate: Date = Date() {
-        didSet { timers = [:]; loadChecks() }
+        didSet { timers = [:]; NotificationManager.cancelAllTimerDone(); loadChecks() }
     }
     @Published var checks: [String: Bool] = [:]
     @Published var timers: [String: RunningTimer] = [:]
@@ -489,11 +521,16 @@ final class AppStore: ObservableObject {
     func tap(_ step: RStep) {
         let key = step.key
         if isDone(key) { timers.removeValue(forKey: key); setCheck(key, false); return }
-        if timers[key] != nil { timers.removeValue(forKey: key); return }
+        if timers[key] != nil {
+            timers.removeValue(forKey: key)
+            NotificationManager.cancelTimerDone(key: key)
+            return
+        }
         if let wait = step.wait, wait > 0 {
             let name = step.label ?? Catalog.products[step.productID ?? ""]?.name ?? "Step"
-            timers[key] = RunningTimer(end: Date().addingTimeInterval(TimeInterval(wait * 60)),
-                                       total: TimeInterval(wait * 60), label: name)
+            let end = Date().addingTimeInterval(TimeInterval(wait * 60))
+            timers[key] = RunningTimer(end: end, total: TimeInterval(wait * 60), label: name)
+            NotificationManager.scheduleTimerDone(key: key, label: name, end: end)
         } else {
             setCheck(key, true)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -502,7 +539,9 @@ final class AppStore: ObservableObject {
 
     /// Double tap: skip any timer and complete immediately.
     func skip(_ key: String) {
-        timers.removeValue(forKey: key)
+        if timers.removeValue(forKey: key) != nil {
+            NotificationManager.cancelTimerDone(key: key)
+        }
         if !isDone(key) {
             setCheck(key, true)
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -515,7 +554,13 @@ final class AppStore: ObservableObject {
         for (key, t) in timers where now >= t.end {
             timers.removeValue(forKey: key)
             setCheck(key, true)
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            // Expired just now, with the app in use: chime here and the pending
+            // notification is suppressed. Expired while backgrounded: the local
+            // notification already alerted, so complete quietly.
+            if now.timeIntervalSince(t.end) < 1.5 {
+                AudioServicesPlaySystemSound(1007) // gentle tri-tone chime
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            }
         }
         if !timers.isEmpty {
             objectWillChange.send() // refresh countdown labels
