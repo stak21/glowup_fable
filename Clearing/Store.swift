@@ -8,7 +8,16 @@ import AudioToolbox
 
 // MARK: - Store
 
+/// Which routine world the app is showing: the user's real data ("legacy")
+/// or a blank sandbox for testing the new-user experience ("fresh").
+/// Routines and daily checks are stored per profile; everything else
+/// (wishlist, photos, reminders, quiz) is shared.
+enum RoutineProfile: String {
+    case legacy, fresh
+}
+
 final class AppStore: ObservableObject {
+    @Published private(set) var profile: RoutineProfile
     @Published var selectedDate: Date = Date() {
         didSet { timers = [:]; NotificationManager.cancelAllTimerDone(); loadChecks() }
     }
@@ -40,7 +49,7 @@ final class AppStore: ObservableObject {
     @Published var routines: [Routine] = [] {
         didSet {
             if let data = try? JSONEncoder().encode(routines) {
-                UserDefaults.standard.set(data, forKey: "routines")
+                UserDefaults.standard.set(data, forKey: Self.routinesKey(for: profile))
             }
         }
     }
@@ -67,6 +76,8 @@ final class AppStore: ObservableObject {
     }()
 
     init() {
+        profile = UserDefaults.standard.string(forKey: "activeProfile")
+            .flatMap(RoutineProfile.init(rawValue:)) ?? .legacy
         loadChecks()
         if let data = UserDefaults.standard.data(forKey: "reminders"),
            let saved = try? JSONDecoder().decode([Reminder].self, from: data) {
@@ -89,12 +100,38 @@ final class AppStore: ObservableObject {
            let saved = try? JSONDecoder().decode(QuizResult.self, from: data) {
             quizResult = saved
         }
-        if let data = UserDefaults.standard.data(forKey: "routines"),
+        routines = Self.loadRoutines(for: profile)
+    }
+
+    // MARK: Profiles
+
+    private static func routinesKey(for profile: RoutineProfile) -> String {
+        profile == .legacy ? "routines" : "routines-fresh"
+    }
+
+    private var checksKey: String {
+        profile == .legacy ? "checks-\(dateKey)" : "checks-fresh-\(dateKey)"
+    }
+
+    /// The fresh profile starts truly empty — no seeds — to mirror a new install.
+    private static func loadRoutines(for profile: RoutineProfile) -> [Routine] {
+        if let data = UserDefaults.standard.data(forKey: routinesKey(for: profile)),
            let saved = try? JSONDecoder().decode([Routine].self, from: data) {
-            routines = saved
-        } else {
-            routines = Self.migratedSeedRoutines()
+            return saved
         }
+        return profile == .legacy ? migratedSeedRoutines() : []
+    }
+
+    /// Swaps the active routine world. Running timers reset, same as when
+    /// changing the selected date.
+    func switchProfile(_ newProfile: RoutineProfile) {
+        guard newProfile != profile else { return }
+        timers = [:]
+        NotificationManager.cancelAllTimerDone()
+        profile = newProfile
+        UserDefaults.standard.set(newProfile.rawValue, forKey: "activeProfile")
+        routines = Self.loadRoutines(for: newProfile)
+        loadChecks()
     }
 
     /// First-run (or upgrade-from-hardcoded) seed, ordered by any legacy "sectionOrder"
@@ -256,7 +293,7 @@ final class AppStore: ObservableObject {
     }
 
     func loadChecks() {
-        if let data = UserDefaults.standard.data(forKey: "checks-\(dateKey)"),
+        if let data = UserDefaults.standard.data(forKey: checksKey),
            let saved = try? JSONDecoder().decode([String: Bool].self, from: data) {
             checks = saved
         } else {
@@ -266,7 +303,7 @@ final class AppStore: ObservableObject {
 
     private func saveChecks() {
         if let data = try? JSONEncoder().encode(checks) {
-            UserDefaults.standard.set(data, forKey: "checks-\(dateKey)")
+            UserDefaults.standard.set(data, forKey: checksKey)
         }
     }
 

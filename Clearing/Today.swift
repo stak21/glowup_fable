@@ -9,31 +9,49 @@ import UniformTypeIdentifiers
 // MARK: - Root
 
 struct RootView: View {
-    @State private var selectedTab = 0
+    @EnvironmentObject var store: AppStore
+    @State private var selectedTab = Tab.today
+
+    /// Today shows the fresh (new-user sandbox) profile; Legacy shows the
+    /// user's real routines. Week and Shop follow whichever was entered last.
+    enum Tab: Int {
+        case today = 0, legacy, week, photos, shop, reminders
+    }
+
     var body: some View {
         TabView(selection: $selectedTab) {
             TodayView()
                 .tabItem { Label("Today", systemImage: "checklist") }
-                .tag(0)
+                .tag(Tab.today)
+            TodayView()
+                .tabItem { Label("Legacy", systemImage: "clock.arrow.circlepath") }
+                .tag(Tab.legacy)
             WeekPlanView()
                 .tabItem { Label("Week", systemImage: "calendar") }
-                .tag(1)
+                .tag(Tab.week)
             PhotosView()
                 .tabItem { Label("Photos", systemImage: "camera.fill") }
-                .tag(2)
+                .tag(Tab.photos)
             ShopView()
                 .tabItem { Label("Shop", systemImage: "bag.fill") }
-                .tag(3)
+                .tag(Tab.shop)
             RemindersView()
                 .tabItem { Label("Reminders", systemImage: "bell.fill") }
-                .tag(4)
+                .tag(Tab.reminders)
         }
         .tint(.roseDeep)
+        .onAppear {
+            selectedTab = store.profile == .legacy ? .legacy : .today
+        }
+        .onChange(of: selectedTab) { tab in
+            if tab == .today { store.switchProfile(.fresh) }
+            if tab == .legacy { store.switchProfile(.legacy) }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .openTodayTab)) { _ in
-            selectedTab = 0
+            selectedTab = store.profile == .legacy ? .legacy : .today
         }
         .onReceive(NotificationCenter.default.publisher(for: .openShopTab)) { _ in
-            selectedTab = 3
+            selectedTab = .shop
         }
     }
 }
@@ -59,6 +77,10 @@ struct TodayView: View {
                         ProgressHeader()
                         WeekStrip()
                         sectionIconRow(proxy: proxy)
+
+                        if store.routines.isEmpty {
+                            emptyState
+                        }
 
                         ForEach(store.visibleRoutines) { routine in
                             Group {
@@ -93,6 +115,35 @@ struct TodayView: View {
         .sheet(item: $infoProduct) { ProductSheet(product: $0) }
         .sheet(isPresented: $showManager) { RoutineManagerSheet() }
         .sheet(item: $editingRoutine) { RoutineEditorSheet(routine: $0, isNew: false) }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 10) {
+            Text("🌸")
+                .font(.system(size: 44))
+            Text("No routines yet")
+                .font(.system(.title3, design: .serif).weight(.semibold))
+                .foregroundColor(.ink)
+            Text("Build your first ritual with the pencil above,\nor find a starter kit in the Shop.")
+                .font(.footnote)
+                .foregroundColor(.soft)
+                .multilineTextAlignment(.center)
+            Button {
+                showManager = true
+            } label: {
+                Text("Create a routine")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 22)
+                    .padding(.vertical, 10)
+                    .background(Capsule().fill(Color.rose))
+            }
+            .padding(.top, 4)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 36)
+        .background(RoundedRectangle(cornerRadius: 22).fill(Color.white.opacity(0.85)))
+        .padding(.top, 12)
     }
 
     private func sectionIconRow(proxy: ScrollViewProxy) -> some View {
