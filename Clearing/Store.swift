@@ -23,6 +23,13 @@ final class AppStore: ObservableObject {
         }
     }
     @Published var progressPhotos: [ProgressPhoto] = []
+    @Published var wishlist: [WishlistItem] = [] {
+        didSet {
+            if let data = try? JSONEncoder().encode(wishlist) {
+                UserDefaults.standard.set(data, forKey: "wishlist")
+            }
+        }
+    }
     @Published var sectionOrder: [String] = [] {
         didSet {
             if let data = try? JSONEncoder().encode(sectionOrder) {
@@ -61,6 +68,10 @@ final class AppStore: ObservableObject {
            let saved = try? JSONDecoder().decode([ProgressPhoto].self, from: data) {
             progressPhotos = saved
         }
+        if let data = UserDefaults.standard.data(forKey: "wishlist"),
+           let saved = try? JSONDecoder().decode([WishlistItem].self, from: data) {
+            wishlist = saved
+        }
         if let data = UserDefaults.standard.data(forKey: "sectionOrder"),
            let saved = try? JSONDecoder().decode([String].self, from: data) {
             let valid = saved.filter { Self.defaultSectionOrder.contains($0) }
@@ -69,6 +80,24 @@ final class AppStore: ObservableObject {
         } else {
             sectionOrder = Self.defaultSectionOrder
         }
+    }
+
+    func isWishlisted(_ productID: String) -> Bool {
+        wishlist.contains { $0.productID == productID }
+    }
+
+    func toggleWishlist(_ productID: String) {
+        if isWishlisted(productID) {
+            wishlist.removeAll { $0.productID == productID }
+        } else {
+            wishlist.append(WishlistItem(productID: productID))
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        }
+    }
+
+    func togglePurchased(_ productID: String) {
+        guard let idx = wishlist.firstIndex(where: { $0.productID == productID }) else { return }
+        wishlist[idx].purchased.toggle()
     }
 
     var dateKey: String { Self.keyFormatter.string(from: selectedDate) }

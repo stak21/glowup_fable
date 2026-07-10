@@ -21,8 +21,8 @@ struct RootView: View {
             PhotosView()
                 .tabItem { Label("Photos", systemImage: "camera.fill") }
                 .tag(2)
-            ProductLookupView()
-                .tabItem { Label("Products", systemImage: "magnifyingglass") }
+            ShopView()
+                .tabItem { Label("Shop", systemImage: "bag.fill") }
                 .tag(3)
             RemindersView()
                 .tabItem { Label("Reminders", systemImage: "bell.fill") }
