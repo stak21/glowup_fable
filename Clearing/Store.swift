@@ -30,6 +30,13 @@ final class AppStore: ObservableObject {
             }
         }
     }
+    @Published var quizResult: QuizResult? {
+        didSet {
+            if let result = quizResult, let data = try? JSONEncoder().encode(result) {
+                UserDefaults.standard.set(data, forKey: "quizResult")
+            }
+        }
+    }
     @Published var sectionOrder: [String] = [] {
         didSet {
             if let data = try? JSONEncoder().encode(sectionOrder) {
@@ -72,6 +79,10 @@ final class AppStore: ObservableObject {
            let saved = try? JSONDecoder().decode([WishlistItem].self, from: data) {
             wishlist = saved
         }
+        if let data = UserDefaults.standard.data(forKey: "quizResult"),
+           let saved = try? JSONDecoder().decode(QuizResult.self, from: data) {
+            quizResult = saved
+        }
         if let data = UserDefaults.standard.data(forKey: "sectionOrder"),
            let saved = try? JSONDecoder().decode([String].self, from: data) {
             let valid = saved.filter { Self.defaultSectionOrder.contains($0) }
@@ -98,6 +109,23 @@ final class AppStore: ObservableObject {
     func togglePurchased(_ productID: String) {
         guard let idx = wishlist.firstIndex(where: { $0.productID == productID }) else { return }
         wishlist[idx].purchased.toggle()
+    }
+
+    /// Resolved product IDs for a kit, honoring sensitive-skin swaps.
+    func resolvedProductIDs(for kit: RoutineKit) -> [String] {
+        let sensitive = quizResult?.skinType == .sensitive
+        return kit.items.map { item in
+            sensitive ? (item.sensitiveAlt ?? item.productID) : item.productID
+        }
+    }
+
+    /// Adds every kit product not already on the wishlist; returns how many were added.
+    @discardableResult
+    func addKit(_ kit: RoutineKit) -> Int {
+        let newIDs = resolvedProductIDs(for: kit).filter { !isWishlisted($0) }
+        for id in newIDs { wishlist.append(WishlistItem(productID: id)) }
+        if !newIDs.isEmpty { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+        return newIDs.count
     }
 
     var dateKey: String { Self.keyFormatter.string(from: selectedDate) }

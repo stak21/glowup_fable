@@ -106,6 +106,80 @@ struct WishlistItem: Identifiable, Codable, Equatable {
     var purchased = false     // checkable while shopping in-store
 }
 
+// MARK: - Routine kits + quiz
+
+enum RoutineTier: String, Codable, CaseIterable, Identifiable {
+    case budget, mid, luxury
+    var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .budget: return "Budget"
+        case .mid: return "Mid-range"
+        case .luxury: return "Luxury"
+        }
+    }
+    var emoji: String {
+        switch self {
+        case .budget: return "💛"
+        case .mid: return "💗"
+        case .luxury: return "👑"
+        }
+    }
+    var hint: String {
+        switch self {
+        case .budget: return "Around $60–70 all in"
+        case .mid: return "Around $100–120 all in"
+        case .luxury: return "The no-compromise picks"
+        }
+    }
+}
+
+enum SkinType: String, Codable, CaseIterable, Identifiable {
+    case oily, dry, combination, sensitive, unsure
+    var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .oily: return "Oily"
+        case .dry: return "Dry"
+        case .combination: return "Combination"
+        case .sensitive: return "Sensitive"
+        case .unsure: return "Not sure"
+        }
+    }
+    var emoji: String {
+        switch self {
+        case .oily: return "✨"
+        case .dry: return "🏜️"
+        case .combination: return "🌗"
+        case .sensitive: return "🌷"
+        case .unsure: return "🤔"
+        }
+    }
+}
+
+struct KitItem: Codable, Equatable {
+    let productID: String           // key into the shop catalog
+    let role: String                // "Cleanse" / "Treat" / "Moisturize" / "Protect"
+    var sensitiveAlt: String? = nil // gentler swap when the quiz says sensitive
+}
+
+struct RoutineKit: Identifiable, Codable, Equatable {
+    let id: String                  // "<concern>-<tier>", e.g. "acne-budget"
+    let concern: Effect
+    let tier: RoutineTier
+    let title: String
+    let blurb: String
+    let items: [KitItem]
+}
+
+struct QuizResult: Codable, Equatable {
+    var skinType: SkinType
+    var concern: Effect
+    var tier: RoutineTier
+    var takenAt = Date()
+    var kitID: String { "\(concern.rawValue)-\(tier.rawValue)" }
+}
+
 enum DateKeyFormat {
     static let key: DateFormatter = {
         let f = DateFormatter()

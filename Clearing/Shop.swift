@@ -11,8 +11,16 @@ struct ShopView: View {
     @State private var activeEffects: Set<Effect> = []
     @State private var infoProduct: ShopProduct?
     @State private var showWishlist = false
+    @State private var showQuiz = false
+    @State private var selectedTier: RoutineTier = .budget
+    @State private var presentedKit: RoutineKit?
 
     private let catalog: [ShopProduct] = BundledShopCatalog().allProducts()
+    private let kits: [RoutineKit] = BundledKitCatalog().allKits()
+
+    private var productsByID: [String: ShopProduct] {
+        Dictionary(uniqueKeysWithValues: catalog.map { ($0.id, $0) })
+    }
 
     private var results: [ShopProduct] {
         var items = catalog
@@ -46,6 +54,8 @@ struct ShopView: View {
                     }
                     .padding(.top, 8)
 
+                    routinesSection
+
                     Text("Find something for…")
                         .font(.caption.weight(.heavy))
                         .foregroundColor(.soft)
@@ -76,6 +86,100 @@ struct ShopView: View {
         }
         .sheet(item: $infoProduct) { ShopProductSheet(product: $0) }
         .sheet(isPresented: $showWishlist) { WishlistSheet(catalog: catalog) }
+        .sheet(isPresented: $showQuiz) { QuizSheet(kits: kits, catalog: catalog) }
+        .sheet(item: $presentedKit) { KitSheet(kit: $0, catalog: catalog) }
+    }
+
+    // MARK: Routines section
+
+    private var routinesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if let result = store.quizResult, let match = kits.first(where: { $0.id == result.kitID }) {
+                Button { presentedKit = match } label: {
+                    HStack(spacing: 12) {
+                        Text("✨")
+                            .font(.title3)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Your match: \(match.title)")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(.ink)
+                            Text("\(match.tier.emoji) \(match.tier.displayName) · tap to see your routine")
+                                .font(.caption)
+                                .foregroundColor(.soft)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(.faint)
+                    }
+                    .padding(14)
+                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.roseTint))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.rose, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                Button { showQuiz = true } label: {
+                    Text("Retake quiz")
+                        .font(.caption.weight(.heavy))
+                        .foregroundColor(.roseDeep)
+                }
+            } else {
+                Button { showQuiz = true } label: {
+                    HStack(spacing: 12) {
+                        Text("✨")
+                            .font(.title3)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Find your routine")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(.ink)
+                            Text("30-second quiz · skin type, goal, budget")
+                                .font(.caption)
+                                .foregroundColor(.soft)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                            .foregroundColor(.faint)
+                    }
+                    .padding(14)
+                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.roseTint))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.rose, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            }
+
+            Text("Routine kits")
+                .font(.caption.weight(.heavy))
+                .foregroundColor(.soft)
+                .padding(.top, 6)
+
+            HStack(spacing: 8) {
+                ForEach(RoutineTier.allCases) { tier in
+                    let active = selectedTier == tier
+                    Button { selectedTier = tier } label: {
+                        Text("\(tier.emoji) \(tier.displayName)")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundColor(active ? .white : .ink)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(Capsule().fill(active ? Color.rose : Color.white))
+                            .overlay(Capsule().stroke(active ? Color.rose : Color.lineC, lineWidth: 1))
+                    }
+                }
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(kits.filter { $0.tier == selectedTier }) { kit in
+                        Button { presentedKit = kit } label: {
+                            KitCard(kit: kit, products: productsByID)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+        .padding(.top, 4)
     }
 
     private var wishlistButton: some View {

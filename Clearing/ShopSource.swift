@@ -20,6 +20,16 @@ struct BundledShopCatalog: ShopProductSource {
     }
 }
 
+struct BundledKitCatalog {
+    func allKits() -> [RoutineKit] {
+        guard let url = Bundle.main.url(forResource: "RoutineKits", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let kits = try? JSONDecoder().decode([RoutineKit].self, from: data)
+        else { return [] }
+        return kits
+    }
+}
+
 // MARK: - Affiliate links
 
 enum Affiliate {

@@ -1,0 +1,197 @@
+[
+  {
+    "id": "acne-budget",
+    "concern": "acne",
+    "tier": "budget",
+    "title": "Fresh Start",
+    "blurb": "The proven acne basics — nothing extra, everything that works.",
+    "items": [
+      { "productID": "cerave-acne-foaming", "role": "Cleanse", "sensitiveAlt": "lrp-toleriane-cleanser" },
+      { "productID": "differin-gel", "role": "Treat", "sensitiveAlt": "to-azelaic" },
+      { "productID": "neutrogena-hydro-boost", "role": "Moisturize" },
+      { "productID": "boj-relief-sun", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "acne-mid",
+    "concern": "acne",
+    "tier": "mid",
+    "title": "Clear & Confident",
+    "blurb": "Step up to the gold-standard pore clearer and the derm-favorite SPF.",
+    "items": [
+      { "productID": "cerave-acne-foaming", "role": "Cleanse", "sensitiveAlt": "lrp-toleriane-cleanser" },
+      { "productID": "paulas-choice-bha", "role": "Treat", "sensitiveAlt": "cosrx-bha-blackhead" },
+      { "productID": "neutrogena-hydro-boost", "role": "Moisturize" },
+      { "productID": "eltamd-uv-clear", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "acne-luxury",
+    "concern": "acne",
+    "tier": "luxury",
+    "title": "Glass Skin, Clear Skin",
+    "blurb": "Clearing that feels like a spa — professional-strength acids in luxury textures.",
+    "items": [
+      { "productID": "tatcha-rice-wash", "role": "Cleanse" },
+      { "productID": "drunk-elephant-framboos", "role": "Treat", "sensitiveAlt": "cosrx-bha-blackhead" },
+      { "productID": "tatcha-water-cream", "role": "Moisturize" },
+      { "productID": "eltamd-uv-clear", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "darkSpots-budget",
+    "concern": "darkSpots",
+    "tier": "budget",
+    "title": "The Fade Starter",
+    "blurb": "Gentle, steady fading — arbutin plus daily SPF is the whole secret.",
+    "items": [
+      { "productID": "lrp-toleriane-cleanser", "role": "Cleanse" },
+      { "productID": "to-alpha-arbutin", "role": "Treat" },
+      { "productID": "cerave-moisturizing-cream", "role": "Moisturize" },
+      { "productID": "boj-relief-sun", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "darkSpots-mid",
+    "concern": "darkSpots",
+    "tier": "mid",
+    "title": "Spot Fade Pro",
+    "blurb": "The newest science for stubborn marks, with tone-evening built into every step.",
+    "items": [
+      { "productID": "urban-skin-rx-even-tone", "role": "Cleanse", "sensitiveAlt": "lrp-toleriane-cleanser" },
+      { "productID": "lrp-mela-b3", "role": "Treat" },
+      { "productID": "neutrogena-hydro-boost", "role": "Moisturize" },
+      { "productID": "lrp-anthelios", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "darkSpots-luxury",
+    "concern": "darkSpots",
+    "tier": "luxury",
+    "title": "The Brightening Vault",
+    "blurb": "Clinical-grade correction — what the derm office would build if money were no object.",
+    "items": [
+      { "productID": "tatcha-rice-wash", "role": "Cleanse" },
+      { "productID": "skinceuticals-discoloration-defense", "role": "Treat" },
+      { "productID": "drunk-elephant-protini", "role": "Moisturize" },
+      { "productID": "eltamd-uv-clear", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "texture-budget",
+    "concern": "texture",
+    "tier": "budget",
+    "title": "Smooth Operator",
+    "blurb": "A gentle acid, a solid cream, and glow that builds week over week.",
+    "items": [
+      { "productID": "lrp-toleriane-cleanser", "role": "Cleanse" },
+      { "productID": "to-lactic-acid", "role": "Treat", "sensitiveAlt": "cosrx-aha-bha-toner" },
+      { "productID": "cerave-moisturizing-cream", "role": "Moisturize" },
+      { "productID": "boj-relief-sun", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "texture-mid",
+    "concern": "texture",
+    "tier": "mid",
+    "title": "The Glow Routine",
+    "blurb": "Pore-clearing BHA by night, overnight water mask, invisible SPF by day.",
+    "items": [
+      { "productID": "lrp-toleriane-cleanser", "role": "Cleanse" },
+      { "productID": "paulas-choice-bha", "role": "Treat", "sensitiveAlt": "cosrx-aha-bha-toner" },
+      { "productID": "laneige-water-sleeping-mask", "role": "Moisturize" },
+      { "productID": "supergoop-unseen", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "texture-luxury",
+    "concern": "texture",
+    "tier": "luxury",
+    "title": "Silk & Polish",
+    "blurb": "The cult glow-getters — wake up polished, every single morning.",
+    "items": [
+      { "productID": "tatcha-rice-wash", "role": "Cleanse" },
+      { "productID": "sunday-riley-good-genes", "role": "Treat", "sensitiveAlt": "to-lactic-acid" },
+      { "productID": "tatcha-water-cream", "role": "Moisturize" },
+      { "productID": "supergoop-unseen", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "hydration-budget",
+    "concern": "hydration",
+    "tier": "budget",
+    "title": "The Big Drink",
+    "blurb": "Hyaluronic layering done right — plump skin for pocket change.",
+    "items": [
+      { "productID": "lrp-toleriane-cleanser", "role": "Cleanse" },
+      { "productID": "to-hyaluronic", "role": "Treat" },
+      { "productID": "cerave-moisturizing-cream", "role": "Moisturize" },
+      { "productID": "boj-relief-sun", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "hydration-mid",
+    "concern": "hydration",
+    "tier": "mid",
+    "title": "Dew It All",
+    "blurb": "Snail mucin plus an overnight water mask — the K-beauty dew stack.",
+    "items": [
+      { "productID": "lrp-toleriane-cleanser", "role": "Cleanse" },
+      { "productID": "cosrx-snail-mucin", "role": "Treat" },
+      { "productID": "laneige-water-sleeping-mask", "role": "Moisturize" },
+      { "productID": "boj-relief-sun", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "hydration-luxury",
+    "concern": "hydration",
+    "tier": "luxury",
+    "title": "The Deep End",
+    "blurb": "Pitera, rice water and the cult water cream — hydration as a luxury ritual.",
+    "items": [
+      { "productID": "tatcha-rice-wash", "role": "Cleanse" },
+      { "productID": "sk-ii-essence", "role": "Treat" },
+      { "productID": "tatcha-water-cream", "role": "Moisturize" },
+      { "productID": "isdin-eryfotona", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "antiAging-budget",
+    "concern": "antiAging",
+    "tier": "budget",
+    "title": "Future You",
+    "blurb": "A gentle retinoid and daily SPF — the two moves that matter most, early.",
+    "items": [
+      { "productID": "lrp-toleriane-cleanser", "role": "Cleanse" },
+      { "productID": "to-granactive-retinoid", "role": "Treat" },
+      { "productID": "cerave-moisturizing-cream", "role": "Moisturize" },
+      { "productID": "boj-relief-sun", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "antiAging-mid",
+    "concern": "antiAging",
+    "tier": "mid",
+    "title": "Turn Back Time",
+    "blurb": "Proven retinol at night, derm-favorite protection by day.",
+    "items": [
+      { "productID": "lrp-toleriane-cleanser", "role": "Cleanse" },
+      { "productID": "roc-retinol-correxion", "role": "Treat", "sensitiveAlt": "cerave-resurfacing-retinol" },
+      { "productID": "neutrogena-hydro-boost", "role": "Moisturize" },
+      { "productID": "eltamd-uv-clear", "role": "Protect" }
+    ]
+  },
+  {
+    "id": "antiAging-luxury",
+    "concern": "antiAging",
+    "tier": "luxury",
+    "title": "The Investment",
+    "blurb": "C E Ferulic, peptides and repair-grade SPF — the routine that ages backwards.",
+    "items": [
+      { "productID": "tatcha-rice-wash", "role": "Cleanse" },
+      { "productID": "skinceuticals-ce-ferulic", "role": "Treat" },
+      { "productID": "drunk-elephant-protini", "role": "Moisturize" },
+      { "productID": "isdin-eryfotona", "role": "Protect" }
+    ]
+  }
+]
