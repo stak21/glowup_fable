@@ -579,6 +579,20 @@ struct ProductSheet: View {
 
 struct WeekPlanView: View {
     @EnvironmentObject var store: AppStore
+    private let displayDayOrder = [1, 2, 3, 4, 5, 6, 0]
+
+    private var everydayRoutines: [Routine] {
+        store.routines.filter { $0.days.count == 7 }
+    }
+
+    private func rotatingRoutines(on day: Int) -> [Routine] {
+        store.routines.filter { $0.days.count < 7 && $0.days.contains(day) }
+    }
+
+    private func dayName(_ day: Int) -> String {
+        Calendar.current.weekdaySymbols[day]
+    }
+
     var body: some View {
         ZStack {
             LinearGradient(colors: [.bgTop, .bgBottom], startPoint: .top, endPoint: .bottom)
@@ -588,15 +602,29 @@ struct WeekPlanView: View {
                     Text("Your week at a glance")
                         .font(.system(.title3, design: .serif).weight(.semibold))
                         .foregroundColor(.ink)
-                    Text("Mornings + body care are the same every day — evenings rotate below.")
+                    Text("Everyday routines run daily — day-specific ones rotate below.")
                         .font(.footnote).foregroundColor(.soft)
 
-                    ForEach(Catalog.weekInfo, id: \.day) { info in
-                        let isToday = info.day == (Calendar.current.component(.weekday, from: Date()) - 1)
+                    if !everydayRoutines.isEmpty {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("EVERY DAY")
+                                .font(.caption2.weight(.heavy)).foregroundColor(.soft)
+                            Text(everydayRoutines.map { "\($0.emoji) \($0.title)" }.joined(separator: "  ·  "))
+                                .font(.footnote).foregroundColor(.ink)
+                                .lineSpacing(4)
+                        }
+                        .padding(15)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 20).fill(Color.white.opacity(0.75)))
+                    }
+
+                    ForEach(displayDayOrder, id: \.self) { day in
+                        let rotating = rotatingRoutines(on: day)
+                        let isToday = day == (Calendar.current.component(.weekday, from: Date()) - 1)
                         VStack(alignment: .leading, spacing: 5) {
                             HStack(spacing: 8) {
-                                Text(info.emoji).font(.title3)
-                                Text(info.name)
+                                Text(rotating.first?.emoji ?? "💗").font(.title3)
+                                Text(dayName(day))
                                     .font(.system(.headline, design: .serif).weight(.semibold))
                                     .foregroundColor(.ink)
                                 if isToday {
@@ -607,11 +635,20 @@ struct WeekPlanView: View {
                                         .background(Capsule().fill(Color.rose))
                                 }
                                 Spacer()
-                                Text(info.focus)
-                                    .font(.caption.weight(.heavy)).foregroundColor(.pmLav)
+                                if let focus = rotating.compactMap(\.focus).first {
+                                    Text(focus)
+                                        .font(.caption.weight(.heavy)).foregroundColor(.pmLav)
+                                }
                             }
-                            Text(info.key).font(.footnote).foregroundColor(.ink)
-                            Text(info.note).font(.caption).foregroundColor(.soft)
+                            if rotating.isEmpty {
+                                Text("Same as every day 💗").font(.footnote).foregroundColor(.soft)
+                            } else {
+                                Text(rotating.map(\.title).joined(separator: " + "))
+                                    .font(.footnote).foregroundColor(.ink)
+                                ForEach(rotating.compactMap(\.planNote), id: \.self) { note in
+                                    Text(note).font(.caption).foregroundColor(.soft)
+                                }
+                            }
                         }
                         .padding(15)
                         .background(RoundedRectangle(cornerRadius: 20)

@@ -280,14 +280,4 @@ enum Catalog {
                 ])
     }
 
-    // Week-tab copy — replaced by routine-derived data in a later phase.
-    static let weekInfo: [(day: Int, name: String, emoji: String, focus: String, key: String, note: String)] = [
-        (1, "Monday", "✨", "Glycolic Glow", "Glycolic acid night — texture + brightness", "10-min wait after glycolic. Face only."),
-        (2, "Tuesday", "🌙", "Retinal Renewal", "Niacinamide buffer + Retinal Intense", "Fully dry skin. No acids, no steam tonight."),
-        (3, "Wednesday", "🧖‍♀️", "Removal · Steam · Mask", "Nair + steam + Tata Harper + azelaic + salicylic", "Big night! Protect the mustache area throughout."),
-        (4, "Thursday", "💫", "Glycolic + Azelaic", "Double acid night", "Skip Glow Up Pads if skin feels sensitive."),
-        (5, "Friday", "🌙", "Retinal Renewal", "Niacinamide buffer + Retinal Intense", "Same rules as Tuesday — dry skin, no heat."),
-        (6, "Saturday", "🫧", "Azelaic + Salicylic", "Deep-clean acid duo", "Salicylic is twice weekly now (Wed + Sat)."),
-        (0, "Sunday", "🛁", "Steam · Mask · Rest", "Steam + Tata Harper mask, then rest", "Recovery night — hydration only after the mask."),
-    ]
 }
