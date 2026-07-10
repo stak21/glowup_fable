@@ -8,6 +8,7 @@
     "why": "Arbutin slows the enzyme that makes excess pigment, so marks fade without irritating your skin the way stronger actives can.",
     "order": "After cleansing and toning, before moisturizer — plays nicely with almost everything.",
     "effects": ["brightening", "darkSpots"],
+    "category": "treatment",
     "price": "~$11",
     "storeURL": "https://www.amazon.com/Ordinary-Alpha-Arbutin-2-30ml/dp/B06XCZFCFZ"
   },
@@ -20,6 +21,7 @@
     "why": "The duo targets stubborn post-acne marks and melasma-type patches from two angles at once — for the price of a lunch.",
     "order": "Morning or night after cleansing, before heavier layers.",
     "effects": ["darkSpots", "brightening"],
+    "category": "treatment",
     "price": "~$14",
     "storeURL": "https://www.amazon.com/GOOD-MOLECULES-Discoloration-Correcting-Serum/dp/B08RJ4ZHXJ"
   },
@@ -32,6 +34,7 @@
     "why": "Tranexamic acid is one of the best-studied ingredients for discoloration that hasn't budged with gentler options.",
     "order": "After watery serums, before moisturizer; start 3 nights a week.",
     "effects": ["darkSpots", "brightening"],
+    "category": "treatment",
     "price": "~$20",
     "storeURL": "https://www.amazon.com/Tranexamic-Topical-Acid-5-Melasma/dp/B086YZRHH7"
   },
@@ -44,6 +47,7 @@
     "why": "Vitamin C brightens overall tone and helps defend against the daily damage that creates new spots.",
     "order": "Morning, after cleansing — then SPF locks in the benefit.",
     "effects": ["brightening", "antiAging"],
+    "category": "treatment",
     "price": "~$20",
     "storeURL": "https://www.amazon.com/TruSkin-Naturals-Vitamin-Topical-Hyaluronic/dp/B01M4MCUAF"
   },
@@ -56,6 +60,7 @@
     "why": "One of the most exciting recent launches for discoloration — strong results in trials, gentle enough for daily use.",
     "order": "Once daily after cleansing, before moisturizer.",
     "effects": ["darkSpots", "brightening"],
+    "category": "treatment",
     "price": "~$45",
     "storeURL": "https://www.amazon.com/Roche-Posay-Anti-Aging-Niacinamide-Discoloration-Long-Lasting/dp/B0CM4B43DZ"
   },
@@ -68,6 +73,7 @@
     "why": "Treats uneven tone while you wash, so you get active benefits even on lazy nights.",
     "order": "Use as your cleanser a few nights a week; leave on 1–2 minutes as a mini mask.",
     "effects": ["darkSpots", "texture"],
+    "category": "cleanser",
     "price": "~$24",
     "storeURL": "https://www.amazon.com/Urban-Skin-Even-Tone-Cleansing/dp/B07CKMBDF9"
   },
@@ -81,6 +87,7 @@
     "order": "In the shower a few times a week; lather, leave briefly, rinse well.",
     "caution": "Can be drying — leave on under a minute at first and moisturize after.",
     "effects": ["darkSpots", "body"],
+    "category": "cleanser",
     "price": "~$12",
     "storeURL": "https://www.amazon.com/Kojie-San-Skin-Brightening-Hyperpigmentation/dp/B00R602KOQ"
   },
@@ -94,6 +101,7 @@
     "order": "After cleansing, 2–3 nights a week to start; don't layer with other strong acids the same night.",
     "caution": "Increases sun sensitivity — SPF every morning.",
     "effects": ["pores", "acne", "texture"],
+    "category": "exfoliant",
     "price": "~$35",
     "storeURL": "https://www.amazon.com/Paulas-Choice-SKIN-PERFECTING-Exfoliant-Facial-Blackheads/dp/B00949CTQQ"
   },
@@ -107,6 +115,7 @@
     "order": "After cleansing on alternate nights; build up slowly.",
     "caution": "Increases sun sensitivity — SPF every morning.",
     "effects": ["pores", "texture"],
+    "category": "exfoliant",
     "price": "~$25",
     "storeURL": "https://www.amazon.com/COSRX-BLACKHEAD-POWER-LIQUID-100ml/dp/B073P7L1NZ"
   },
@@ -120,6 +129,7 @@
     "order": "Pea-sized amount at night on dry skin; start 2–3 nights a week.",
     "caution": "Expect a 4–6 week adjustment period; not for use while pregnant.",
     "effects": ["acne", "texture", "antiAging"],
+    "category": "treatment",
     "price": "~$15",
     "storeURL": "https://www.amazon.com/Differin-Adapalene-0-1-Acne-Treatment/dp/B07L1PHSY9"
   },
@@ -133,6 +143,7 @@
     "order": "Use as your cleanser on breakout-prone days; keep it to once daily.",
     "caution": "Bleaches towels and pillowcases — use white ones.",
     "effects": ["acne"],
+    "category": "cleanser",
     "price": "~$15",
     "storeURL": "https://www.amazon.com/CeraVe-Treatment-Hyaluronic-Niacinamide-Sensitive/dp/B07YLJPMC3"
   },
@@ -146,6 +157,7 @@
     "order": "In the shower a few times a week; moisturize after.",
     "caution": "Bleaches fabric; 10% can be drying on the face — the 4% version is gentler there.",
     "effects": ["acne", "body"],
+    "category": "cleanser",
     "price": "~$12",
     "storeURL": "https://www.amazon.com/PanOxyl-Foaming-Peroxide-Strength-Antimicrobial/dp/B081KL2QYJ"
   },
@@ -158,6 +170,7 @@
     "why": "They absorb the gunk, protect the spot from picking, and the mark heals faster because you left it alone.",
     "order": "On clean, dry skin as the last step at night — skincare goes around, not under.",
     "effects": ["acne"],
+    "category": "other",
     "price": "~$13",
     "storeURL": "https://www.amazon.com/Mighty-Patch-Hydrocolloid-Absorbing-count/dp/B074PVTPBW"
   },
@@ -170,6 +183,7 @@
     "why": "Calms breakouts, regulates oil, fades marks and strengthens your barrier — the best value-per-dollar serum in skincare.",
     "order": "Morning or night after cleansing; layers under everything.",
     "effects": ["pores", "acne", "brightening"],
+    "category": "treatment",
     "price": "~$7",
     "storeURL": "https://www.amazon.com/Ordinary-Niacinamide-10-Zinc-30ml/dp/B01MDTVZTZ"
   },
@@ -183,6 +197,7 @@
     "order": "Thin layer on breakout-prone areas after cleansing.",
     "caution": "Contains benzoyl peroxide — can bleach fabric.",
     "effects": ["acne", "darkSpots"],
+    "category": "treatment",
     "price": "~$32",
     "storeURL": "https://www.amazon.com/dp/B004L8J15C"
   },
@@ -196,6 +211,7 @@
     "order": "At night, 2–3 times a week; never the same night as retinoids.",
     "caution": "Increases sun sensitivity — SPF every morning.",
     "effects": ["texture", "brightening"],
+    "category": "exfoliant",
     "price": "~$9",
     "storeURL": "https://www.amazon.com/Ordinary-High-Strength-Exfoliating-Smoother-Brighter/dp/B07NDNPCKW"
   },
@@ -209,6 +225,7 @@
     "order": "On a cotton pad after cleansing at night, 2–3 times a week.",
     "caution": "Increases sun sensitivity — SPF every morning. Skip on freshly shaved skin.",
     "effects": ["texture", "brightening", "body"],
+    "category": "exfoliant",
     "price": "~$13",
     "storeURL": "https://www.amazon.com/Ordinary-Exfoliating-Brightening-Smoothing-Even-Looking/dp/B071914GGL"
   },
@@ -221,6 +238,7 @@
     "why": "The AHA dissolves the keratin plugs while the pumice polishes — visibly smoother arms and legs in weeks.",
     "order": "In the shower 2–3 times a week on damp skin, then moisturize.",
     "effects": ["body", "texture"],
+    "category": "exfoliant",
     "price": "~$30",
     "storeURL": "https://www.amazon.com/First-Aid-Beauty-Eraser-Scrub/dp/B07XG6BKCV"
   },
@@ -233,6 +251,7 @@
     "why": "The dermatologist classic for rough, bumpy body skin — it works while feeling like plain lotion.",
     "order": "Daily after showering; not right after shaving.",
     "effects": ["body", "texture", "hydration"],
+    "category": "moisturizer",
     "price": "~$21",
     "storeURL": "https://www.amazon.com/AmLactin-Daily-Moisturizing-Lotion-Paraben/dp/B09QXQ8JR6"
   },
@@ -245,6 +264,7 @@
     "why": "Acid benefits at training-wheels strength — great for keeping texture smooth between stronger treatment nights.",
     "order": "After cleansing, before serums; gentle enough for near-daily use.",
     "effects": ["texture", "pores"],
+    "category": "exfoliant",
     "price": "~$15",
     "storeURL": "https://www.amazon.com/COSRX-Clarifying-Treatment-Toner-150ml/dp/B073P6BPF5"
   },
@@ -258,6 +278,7 @@
     "order": "Step 1, wait 2 minutes, step 2; start with 2–3 times a week.",
     "caution": "Increases sun sensitivity — SPF every morning.",
     "effects": ["texture", "antiAging", "brightening"],
+    "category": "exfoliant",
     "price": "~$92",
     "storeURL": "https://www.amazon.com/Dr-Dennis-Gross-Skincare-Universal/dp/B00EFYG5VU"
   },
@@ -270,6 +291,7 @@
     "why": "Deeply hydrating and repair-focused — beloved for calming post-acne skin and giving that dewy 'glass skin' finish.",
     "order": "After toning, before heavier serums and creams.",
     "effects": ["hydration", "soothing", "texture"],
+    "category": "treatment",
     "price": "~$14",
     "storeURL": "https://www.amazon.com/COSRX-Repairing-Hydrating-Secretion-Phthalates/dp/B00PBX3L7K"
   },
@@ -282,6 +304,7 @@
     "why": "Real hydration with zero heaviness — the moisturizer for skin that hates feeling like it's wearing moisturizer.",
     "order": "Last skincare step at night, or before SPF in the morning.",
     "effects": ["hydration"],
+    "category": "moisturizer",
     "price": "~$20",
     "storeURL": "https://www.amazon.com/Neutrogena-Hydro-Hyaluronic-Hydrating-Moisturizer/dp/B00NR1YQHM"
   },
@@ -294,6 +317,7 @@
     "why": "Restores the skin barrier that actives chip away at — the safety net every routine with acids or retinoids needs.",
     "order": "Face: last step. Body: after every shower.",
     "effects": ["hydration", "body", "soothing"],
+    "category": "moisturizer",
     "price": "~$17",
     "storeURL": "https://www.amazon.com/CeraVe-Moisturizing-Cream-Daily-Moisturizer/dp/B00TTD9BRC"
   },
@@ -306,6 +330,7 @@
     "why": "When your skin is angry from too many actives, this is the reset button — barrier repair in a tube.",
     "order": "As your moisturizer (or over it) on recovery nights; skip actives those nights.",
     "effects": ["soothing", "hydration"],
+    "category": "moisturizer",
     "price": "~$16",
     "storeURL": "https://www.amazon.com/Roche-Posay-Cicaplast-Baume-Soothing-Repairing/dp/B072MK7BN2"
   },
@@ -318,6 +343,7 @@
     "why": "Pulls water into the skin so everything layered on top works on plump, hydrated skin instead of thirsty skin.",
     "order": "On damp skin right after cleansing, then seal with moisturizer.",
     "effects": ["hydration"],
+    "category": "treatment",
     "price": "~$9",
     "storeURL": "https://www.amazon.com/Ordinary-Hyaluronic-Acid-2-30ml/dp/B01MYEZPC8"
   },
@@ -330,6 +356,7 @@
     "why": "You wake up looking like you drank three liters of water and got nine hours of sleep, even when neither is true.",
     "order": "As the last step at night, 2–3 times a week instead of (or over) moisturizer.",
     "effects": ["hydration", "brightening"],
+    "category": "moisturizer",
     "price": "~$29",
     "storeURL": "https://www.amazon.com/LANEIGE-111975281-Water-Sleeping-Mask/dp/B07XFLXW3S"
   },
@@ -342,6 +369,7 @@
     "why": "The green tint neutralizes redness instantly while centella calms it for real over time.",
     "order": "After serums, in place of or before moisturizer.",
     "effects": ["soothing"],
+    "category": "moisturizer",
     "price": "~$52",
     "storeURL": "https://www.amazon.com/Dr-Jart-Cicapair-Correcting-Treatment/dp/B07DR5816K"
   },
@@ -354,6 +382,7 @@
     "why": "Oat is one of the best-proven soothers in skincare — drugstore price, derm-office reputation.",
     "order": "Morning and night as your moisturizer on sensitive days.",
     "effects": ["soothing", "hydration"],
+    "category": "moisturizer",
     "price": "~$13",
     "storeURL": "https://www.amazon.com/Aveeno-Moisturizer-Lightweight-Hypoallergenic-Paraben-Free/dp/B08D9MSGVQ"
   },
@@ -366,6 +395,7 @@
     "why": "Instant relief for hot, irritated or freshly-treated skin — keep one in the fridge.",
     "order": "Anytime skin feels reactive; pat in, don't let it evaporate off.",
     "effects": ["soothing"],
+    "category": "other",
     "price": "~$14",
     "storeURL": "https://www.amazon.com/Avene-Thermal-Water-Soothing-Sensitive/dp/B002D48QUC"
   },
@@ -378,6 +408,7 @@
     "why": "Cleans without stripping — the right first step when the rest of your routine has strong actives.",
     "order": "Morning and night as your first step.",
     "effects": ["hydration", "soothing"],
+    "category": "cleanser",
     "price": "~$17",
     "storeURL": "https://www.amazon.com/Roche-Posay-Toleriane-Hydrating-Gentle-Cleanser/dp/B01N7T7JKJ"
   },
@@ -391,6 +422,7 @@
     "order": "At night after water-based serums; start twice a week.",
     "caution": "Not for use while pregnant; SPF every morning.",
     "effects": ["antiAging", "texture", "acne"],
+    "category": "treatment",
     "price": "~$11",
     "storeURL": "https://www.amazon.com/Ordinary-Granactive-Retinoid-Emulsion-Previously/dp/B071HHSMTT"
   },
@@ -404,6 +436,7 @@
     "order": "At night in place of moisturizer, 3 nights a week to start.",
     "caution": "Not for use while pregnant; SPF every morning.",
     "effects": ["antiAging"],
+    "category": "treatment",
     "price": "~$25",
     "storeURL": "https://www.amazon.com/RoC-Correxion-Anti-Aging-Oil-Free-Non-Comedogenic/dp/B00027DMI8"
   },
@@ -417,6 +450,7 @@
     "order": "At night after cleansing; start 2–3 nights a week.",
     "caution": "Not for use while pregnant; SPF every morning.",
     "effects": ["antiAging", "texture", "darkSpots"],
+    "category": "treatment",
     "price": "~$20",
     "storeURL": "https://www.amazon.com/CeraVe-Post-Acne-Refining-Resurfacing-Brightening/dp/B07VWSN95S"
   },
@@ -429,6 +463,7 @@
     "why": "The sunscreen dermatologists actually wear — no breakouts, no white cast drama, and it calms while it protects.",
     "order": "Every morning, last step, ideally two finger-lengths' worth.",
     "effects": ["acne", "darkSpots", "antiAging"],
+    "category": "spf",
     "price": "~$41",
     "storeURL": "https://www.amazon.com/EltaMD-Clear-Sunscreen-Dermatologist-Recommended/dp/B0DM3MN243"
   },
@@ -441,6 +476,7 @@
     "why": "If you skip SPF because it feels like SPF, this is the fix — every spot-fading product works better with daily sun protection.",
     "order": "Every morning as the final step; reapply if you're out long.",
     "effects": ["hydration", "brightening"],
+    "category": "spf",
     "price": "~$18",
     "storeURL": "https://www.amazon.com/s?k=beauty+of+joseon+relief+sun+rice+probiotics"
   },
@@ -453,6 +489,7 @@
     "why": "Invisible on every skin tone and doubles as a makeup primer — removes the last excuse for skipping SPF.",
     "order": "Every morning, last skincare step / first makeup step.",
     "effects": ["pores", "antiAging"],
+    "category": "spf",
     "price": "~$38",
     "storeURL": "https://www.amazon.com/Supergoop-Womens-Mineral-Unseen-Sunscreen/dp/B0D79Q3N64"
   },
@@ -465,6 +502,7 @@
     "why": "One bottle covers beach days, body brightening projects, and daily wear — sun exposure is what keeps dark marks alive.",
     "order": "Every morning; generously on any exposed body areas you're treating.",
     "effects": ["darkSpots", "antiAging", "body"],
+    "category": "spf",
     "price": "~$26",
     "storeURL": "https://www.amazon.com/Roche-Posay-Anthelios-Melt-Sunscreen-Milk/dp/B002CML1VG"
   },
@@ -477,6 +515,7 @@
     "why": "Gently resurfaces body skin while you shower — great support for bacne, bumps and uneven tone on the body.",
     "order": "A few showers a week; let it sit a minute before rinsing.",
     "effects": ["body", "texture", "acne"],
+    "category": "cleanser",
     "price": "~$16",
     "storeURL": "https://www.amazon.com/Getter-Multi-Oil-Hydrating-Naturium-Cleanser/dp/B0B1PDDLGZ"
   },
@@ -489,6 +528,7 @@
     "why": "Chafing causes the friction darkness and rough patches many people try to fade — preventing it beats treating it.",
     "order": "Swipe on before dresses, workouts or hot days.",
     "effects": ["body", "soothing"],
+    "category": "other",
     "price": "~$12",
     "storeURL": "https://www.amazon.com/Megababe-Anti-Chafe-Prevents-Irritation-Bra-Lines/dp/B07CZWYY4H"
   },
@@ -501,6 +541,7 @@
     "why": "Underrated triple threat: calms redness and breakouts, fades marks, and is one of the few actives considered safe in pregnancy.",
     "order": "Morning or night after serums; can sit alongside most actives.",
     "effects": ["soothing", "acne", "darkSpots", "brightening"],
+    "category": "treatment",
     "price": "~$10",
     "storeURL": "https://www.amazon.com/Ordinary-Azelaic-Acid-Suspension-30ml/dp/B06WD5J8KY"
   },
@@ -513,6 +554,7 @@
     "why": "Washes off makeup, SPF and the day without ever leaving skin tight — the cleanser that makes the whole routine feel like a ritual.",
     "order": "Morning and night as the first step.",
     "effects": ["hydration", "soothing"],
+    "category": "cleanser",
     "price": "~$40",
     "storeURL": "https://www.amazon.com/Tatcha-Rice-Wash-Cleanser-Complexion/dp/B08XM8LZ2V"
   },
@@ -525,6 +567,7 @@
     "why": "Rich-skin results with an oil-free, poreless finish — the moisturizer people upgrade to and never leave.",
     "order": "Last skincare step at night, or before SPF in the morning.",
     "effects": ["hydration", "pores"],
+    "category": "moisturizer",
     "price": "~$70",
     "storeURL": "https://www.amazon.com/Oil-Free-Optimal-Hydration-Moisturizer-Poreless/dp/B072NNC2LR"
   },
@@ -537,6 +580,7 @@
     "why": "The most-copied serum in skincare for a reason — decades of clinical data on brightening, firming and defending against the damage that ages skin.",
     "order": "Morning, on clean dry skin, before moisturizer and SPF.",
     "effects": ["brightening", "antiAging"],
+    "category": "treatment",
     "price": "~$182",
     "storeURL": "https://www.amazon.com/SkinCeuticals-Ferulic-Combination-Antioxidant-Treatment/dp/B01HJTA77A"
   },
@@ -549,6 +593,7 @@
     "why": "The serum dermatologists reach for when marks and melasma have shrugged off everything else.",
     "order": "Morning and night after cleansing, before moisturizer.",
     "effects": ["darkSpots", "brightening"],
+    "category": "treatment",
     "price": "~$102",
     "storeURL": "https://www.amazon.com/SkinCeuticals-Discoloration-Defense-Serum-Unisex/dp/B07WS8YYMV"
   },
@@ -562,6 +607,7 @@
     "order": "At night after cleansing, alone or under moisturizer; 3–4 nights a week.",
     "caution": "Increases sun sensitivity — SPF every morning.",
     "effects": ["texture", "brightening"],
+    "category": "exfoliant",
     "price": "~$85",
     "storeURL": "https://www.amazon.com/Sunday-Riley-Genes-Lactic-Treatment/dp/B0037LRZHA"
   },
@@ -574,6 +620,7 @@
     "why": "Feeds skin the building blocks that keep it bouncy — firmer, smoother skin that plays nicely with every active.",
     "order": "Last skincare step, morning or night.",
     "effects": ["antiAging", "hydration"],
+    "category": "moisturizer",
     "price": "~$68",
     "storeURL": "https://www.amazon.com/Drunk-Elephant-Polypeptide-Moisturizer-Milliliters/dp/B07934S6WK"
   },
@@ -587,6 +634,7 @@
     "order": "At night on dry skin, 2–3 nights a week to start; never with retinoids the same night.",
     "caution": "Increases sun sensitivity — SPF every morning.",
     "effects": ["texture", "acne", "pores"],
+    "category": "exfoliant",
     "price": "~$90",
     "storeURL": "https://www.amazon.com/Drunk-Elephant-T-L-C-Framboos-Glycolic/dp/B00L3LDDD6"
   },
@@ -599,6 +647,7 @@
     "why": "Four decades of devotion for a reason — tone looks clearer, texture finer and skin drinks everything layered after it.",
     "order": "After cleansing, patted in before serums.",
     "effects": ["brightening", "texture", "antiAging"],
+    "category": "treatment",
     "price": "~$99",
     "storeURL": "https://www.amazon.com/SK-II-Facial-Treatment-Essence-2-5/dp/B000H723LU"
   },
@@ -611,6 +660,7 @@
     "why": "Protects like a shield and helps repair existing sun damage — the SPF upgrade for skin you're investing in.",
     "order": "Every morning as the final step; reapply if outdoors long.",
     "effects": ["antiAging", "soothing"],
+    "category": "spf",
     "price": "~$65",
     "storeURL": "https://www.amazon.com/ISDIN-Eryfotona-Actinica-Mineral-Sunscreen/dp/B07RXS4FQM"
   }

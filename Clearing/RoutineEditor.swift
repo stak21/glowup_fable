@@ -81,6 +81,9 @@ struct RoutineManagerSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .onChange(of: store.shopAddTarget) { _, target in
+            if target != nil { dismiss() }
+        }
         .sheet(item: $editingRoutine) { RoutineEditorSheet(routine: $0, isNew: false) }
         .sheet(item: $creatingRoutine) { RoutineEditorSheet(routine: $0, isNew: true) }
         .confirmationDialog("Delete this routine?", isPresented: .init(
@@ -333,9 +336,16 @@ struct RoutineEditorSheet: View {
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
         .sheet(isPresented: $showPicker) {
-            ProductPickerSheet(initialCategory: pickerCategory) { productID, category in
-                addStep(productID: productID, category: category)
-            }
+            ProductPickerSheet(initialCategory: pickerCategory,
+                               onPick: { productID, category in
+                                   addStep(productID: productID, category: category)
+                               },
+                               onShopHandoff: { category in
+                                   handOffToShop(category: category)
+                               })
+        }
+        .onChange(of: store.shopAddTarget) { _, target in
+            if target != nil { dismiss() }
         }
         .sheet(item: .init(
             get: { editingStepKey.flatMap { key in draft.steps.first { $0.key == key } } },
@@ -461,6 +471,23 @@ struct RoutineEditorSheet: View {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
         dismiss()
     }
+
+    /// "Find one in the Shop →": silently save the draft so the Shop can add into
+    /// a real routine, arm the hand-off target, and jump tabs. Sheets dismiss via
+    /// their shopAddTarget onChange observers.
+    private func handOffToShop(category: StepCategory?) {
+        var toSave = draft
+        if toSave.title.trimmingCharacters(in: .whitespaces).isEmpty { toSave.title = "My routine" }
+        if toSave.days.isEmpty { toSave.days = Set(0...6) }
+        draft = toSave
+        if store.routines.contains(where: { $0.id == toSave.id }) {
+            store.updateRoutine(toSave)
+        } else {
+            store.addRoutine(toSave)
+        }
+        store.shopAddTarget = ShopAddTarget(routineID: toSave.id, routineTitle: toSave.title, category: category)
+        NotificationCenter.default.post(name: .openShopTab, object: nil)
+    }
 }
 
 // MARK: - Step editor
@@ -535,13 +562,17 @@ struct ProductPickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     let initialCategory: StepCategory?
     let onPick: (String, StepCategory?) -> Void
+    var onShopHandoff: ((StepCategory?) -> Void)? = nil
 
     @State private var query = ""
     @State private var category: StepCategory?
 
-    init(initialCategory: StepCategory?, onPick: @escaping (String, StepCategory?) -> Void) {
+    init(initialCategory: StepCategory?,
+         onPick: @escaping (String, StepCategory?) -> Void,
+         onShopHandoff: ((StepCategory?) -> Void)? = nil) {
         self.initialCategory = initialCategory
         self.onPick = onPick
+        self.onShopHandoff = onShopHandoff
         _category = State(initialValue: initialCategory)
     }
 
@@ -559,7 +590,7 @@ struct ProductPickerSheet: View {
         let builtinIDs = Set(all.map(\.id))
         all += store.shopProducts
             .filter { !builtinIDs.contains($0.id) }
-            .map { Entry(id: $0.id, name: $0.name, detail: "\($0.brand) · \($0.price)", category: nil) }
+            .map { Entry(id: $0.id, name: $0.name, detail: "\($0.brand) · \($0.price)", category: $0.category) }
         var result = all.sorted { $0.name < $1.name }
         if let category {
             result = result.filter { $0.category == category }
@@ -616,10 +647,23 @@ struct ProductPickerSheet: View {
                     }
 
                     if entries.isEmpty {
-                        Text("Nothing matches — try fewer filters. Shop products get categories soon; search by name for now.")
+                        Text("Nothing matches — try fewer filters.")
                             .font(.footnote)
                             .foregroundColor(.soft)
                             .padding(.vertical, 20)
+                    }
+
+                    if let onShopHandoff {
+                        Button {
+                            onShopHandoff(category)
+                        } label: {
+                            Text("Find one in the Shop →")
+                                .font(.footnote.weight(.heavy))
+                                .foregroundColor(.roseDeep)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 11)
+                                .background(Capsule().stroke(Color.roseDeep, lineWidth: 1.5))
+                        }
                     }
 
                     VStack(spacing: 8) {

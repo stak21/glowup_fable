@@ -45,6 +45,9 @@ final class AppStore: ObservableObject {
         }
     }
 
+    /// Active editor→Shop hand-off ("tap a product to add it to <routine>"). Not persisted.
+    @Published var shopAddTarget: ShopAddTarget?
+
     /// Shop catalog cached for cross-catalog product resolution.
     let shopProducts: [ShopProduct] = BundledShopCatalog().allProducts()
     private lazy var shopProductsByID: [String: ShopProduct] =
@@ -175,7 +178,7 @@ final class AppStore: ObservableObject {
         guard let shop = shopProductsByID[id] else { return nil }
         return Product(name: shop.name, tag: "\(shop.brand) · \(shop.tag)",
                        what: shop.what, why: shop.why, order: shop.order,
-                       caution: shop.caution)
+                       caution: shop.caution, category: shop.category)
     }
 
     // MARK: Routine editing
@@ -210,7 +213,7 @@ final class AppStore: ObservableObject {
     /// layering order (cleanser → exfoliant → treatment → moisturizer → SPF → extras).
     func addProduct(_ productID: String, to routineID: String) {
         guard let idx = routines.firstIndex(where: { $0.id == routineID }) else { return }
-        let category = Catalog.products[productID]?.category // shop catalog categories arrive with the Shop hookup
+        let category = Catalog.products[productID]?.category ?? shopProductsByID[productID]?.category
         let step = RStep(key: "st-" + UUID().uuidString.prefix(8).lowercased(),
                          productID: productID, category: category)
         var steps = routines[idx].steps

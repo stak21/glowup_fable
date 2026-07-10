@@ -32,6 +32,9 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: .openTodayTab)) { _ in
             selectedTab = 0
         }
+        .onReceive(NotificationCenter.default.publisher(for: .openShopTab)) { _ in
+            selectedTab = 3
+        }
     }
 }
 

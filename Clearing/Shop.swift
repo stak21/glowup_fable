@@ -15,8 +15,9 @@ struct ShopView: View {
     @State private var selectedTier: RoutineTier = .budget
     @State private var presentedKit: RoutineKit?
 
-    private let catalog: [ShopProduct] = BundledShopCatalog().allProducts()
     private let kits: [RoutineKit] = BundledKitCatalog().allKits()
+
+    private var catalog: [ShopProduct] { store.shopProducts }
 
     private var productsByID: [String: ShopProduct] {
         Dictionary(uniqueKeysWithValues: catalog.map { ($0.id, $0) })
@@ -24,6 +25,9 @@ struct ShopView: View {
 
     private var results: [ShopProduct] {
         var items = catalog
+        if let targetCategory = store.shopAddTarget?.category {
+            items = items.filter { $0.category == targetCategory }
+        }
         if !activeEffects.isEmpty {
             items = items.filter { !activeEffects.isDisjoint(with: $0.effects) }
         }
@@ -53,6 +57,10 @@ struct ShopView: View {
                         wishlistButton
                     }
                     .padding(.top, 8)
+
+                    if let target = store.shopAddTarget {
+                        addTargetBanner(target)
+                    }
 
                     routinesSection
 
@@ -182,6 +190,34 @@ struct ShopView: View {
         .padding(.top, 4)
     }
 
+    private func addTargetBanner(_ target: ShopAddTarget) -> some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Adding to \(target.routineTitle)")
+                    .font(.footnote.weight(.heavy))
+                    .foregroundColor(.roseDeep)
+                Text(target.category.map { "Showing \($0.displayName.lowercased())s — tap one to add it" }
+                     ?? "Tap a product to add it")
+                    .font(.caption2)
+                    .foregroundColor(.soft)
+            }
+            Spacer()
+            Button {
+                store.shopAddTarget = nil
+            } label: {
+                Text("Cancel")
+                    .font(.caption.weight(.heavy))
+                    .foregroundColor(.roseDeep)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Color.white))
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color.roseTint))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.rose, lineWidth: 1))
+    }
+
     private var wishlistButton: some View {
         Button { showWishlist = true } label: {
             HStack(spacing: 5) {
@@ -242,7 +278,16 @@ struct ShopView: View {
     }
 
     private func productRow(_ product: ShopProduct) -> some View {
-        Button { infoProduct = product } label: {
+        Button {
+            if let target = store.shopAddTarget {
+                store.addProduct(product.id, to: target.routineID)
+                store.shopAddTarget = nil
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                NotificationCenter.default.post(name: .openTodayTab, object: nil)
+            } else {
+                infoProduct = product
+            }
+        } label: {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(product.name)
@@ -282,6 +327,7 @@ struct ShopProductSheet: View {
     let product: ShopProduct
     @EnvironmentObject var store: AppStore
     @Environment(\.dismiss) private var dismiss
+    @State private var showRoutinePicker = false
 
     var body: some View {
         ScrollView {
@@ -322,6 +368,14 @@ struct ShopProductSheet: View {
                         .background(Capsule().fill(store.isWishlisted(product.id) ? Color.roseDeep : Color.rose))
                 }
                 .padding(.top, 4)
+                Button { showRoutinePicker = true } label: {
+                    Text("Add to a routine ＋")
+                        .font(.subheadline.weight(.heavy))
+                        .foregroundColor(.roseDeep)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(Capsule().stroke(Color.roseDeep, lineWidth: 1.5))
+                }
                 if let url = Affiliate.url(for: product) {
                     Link(destination: url) {
                         Text("View at store \(product.price) ↗")
@@ -337,6 +391,9 @@ struct ShopProductSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .sheet(isPresented: $showRoutinePicker) {
+            RoutinePickerSheet(productID: product.id)
+        }
     }
 
     private func infoBlock(_ heading: String, _ text: String) -> some View {
@@ -348,6 +405,77 @@ struct ShopProductSheet: View {
                 .font(.subheadline)
                 .foregroundColor(.ink)
         }
+    }
+}
+
+// MARK: - Routine picker (add a shop product to a routine)
+
+struct RoutinePickerSheet: View {
+    let productID: String
+    @EnvironmentObject var store: AppStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var addedTo: String?
+
+    private let displayDayOrder = [1, 2, 3, 4, 5, 6, 0]
+    private let dayLetters = ["S", "M", "T", "W", "T", "F", "S"]
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [.bgTop, .bgBottom], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Add to which routine?")
+                        .font(.system(.title3, design: .serif).weight(.semibold))
+                        .foregroundColor(.ink)
+                        .padding(.top, 20)
+                    Text("It'll slot into the right spot automatically.")
+                        .font(.caption)
+                        .foregroundColor(.soft)
+                    VStack(spacing: 8) {
+                        ForEach(store.routines) { routine in
+                            Button {
+                                store.addProduct(productID, to: routine.id)
+                                addedTo = routine.id
+                                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { dismiss() }
+                            } label: {
+                                HStack(spacing: 12) {
+                                    Text(routine.emoji)
+                                        .font(.title3)
+                                        .frame(width: 38, height: 38)
+                                        .background(RoundedRectangle(cornerRadius: 12).fill(routine.theme.tint))
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(routine.title)
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundColor(.ink)
+                                        HStack(spacing: 3) {
+                                            ForEach(displayDayOrder, id: \.self) { d in
+                                                Text(dayLetters[d])
+                                                    .font(.system(size: 9, weight: .heavy))
+                                                    .foregroundColor(routine.days.contains(d) ? routine.theme.accent : .faint)
+                                            }
+                                        }
+                                    }
+                                    Spacer(minLength: 8)
+                                    Image(systemName: addedTo == routine.id ? "checkmark.circle.fill" : "plus.circle")
+                                        .foregroundColor(addedTo == routine.id ? .greenC : .rose)
+                                }
+                                .padding(12)
+                                .background(RoundedRectangle(cornerRadius: 16).fill(Color.white))
+                                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.lineC, lineWidth: 1))
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(addedTo != nil)
+                        }
+                    }
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 24)
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
     }
 }
 

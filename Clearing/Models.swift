@@ -153,8 +153,16 @@ struct ShopProduct: Identifiable, Codable, Equatable {
     let order: String
     var caution: String? = nil
     let effects: [Effect]
+    let category: StepCategory
     let price: String         // freeform, e.g. "~$15"
     var storeURL: URL? = nil
+}
+
+/// Active "tap a product to add it" hand-off from the routine editor to the Shop tab.
+struct ShopAddTarget: Equatable {
+    let routineID: String
+    let routineTitle: String
+    var category: StepCategory? = nil
 }
 
 struct WishlistItem: Identifiable, Codable, Equatable {

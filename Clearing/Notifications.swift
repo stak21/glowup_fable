@@ -6,6 +6,7 @@ import UserNotifications
 
 extension Notification.Name {
     static let openTodayTab = Notification.Name("openTodayTab")
+    static let openShopTab = Notification.Name("openShopTab")
 }
 
 final class NotifDelegate: NSObject, UNUserNotificationCenterDelegate {
