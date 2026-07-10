@@ -44,10 +44,6 @@ struct TodayView: View {
     @State private var draggedKey: String?
     private let heartbeat = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
-    private var visibleSectionOrder: [String] {
-        store.sectionOrder.filter { $0 != "removal" || store.isWednesday }
-    }
-
     var body: some View {
         ZStack {
             LinearGradient(colors: [.bgTop, .bgBottom], startPoint: .top, endPoint: .bottom)
@@ -59,24 +55,24 @@ struct TodayView: View {
                         WeekStrip()
                         sectionIconRow(proxy: proxy)
 
-                        ForEach(visibleSectionOrder, id: \.self) { key in
+                        ForEach(store.visibleRoutines) { routine in
                             Group {
                                 if isReordering {
-                                    sectionView(for: key)
-                                        .opacity(draggedKey == key ? 0.4 : 1)
+                                    sectionCard(for: routine)
+                                        .opacity(draggedKey == routine.id ? 0.4 : 1)
                                         .onDrag {
-                                            draggedKey = key
-                                            return NSItemProvider(object: key as NSString)
+                                            draggedKey = routine.id
+                                            return NSItemProvider(object: routine.id as NSString)
                                         }
                                         .onDrop(of: [.text], delegate: SectionDropDelegate(
-                                            item: key,
+                                            item: routine.id,
                                             draggedKey: $draggedKey,
-                                            reorder: { moveSection($0, over: $1) }))
+                                            reorder: { store.moveVisibleRoutine($0, over: $1) }))
                                 } else {
-                                    sectionView(for: key)
+                                    sectionCard(for: routine)
                                 }
                             }
-                            .id(key)
+                            .id(routine.id)
                         }
                     }
                     .padding(.horizontal, 16)
@@ -96,11 +92,11 @@ struct TodayView: View {
         HStack(spacing: 8) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(visibleSectionOrder, id: \.self) { key in
+                    ForEach(store.visibleRoutines) { routine in
                         Button {
-                            withAnimation { proxy.scrollTo(key, anchor: .top) }
+                            withAnimation { proxy.scrollTo(routine.id, anchor: .top) }
                         } label: {
-                            Text(sectionEmoji(key))
+                            Text(routine.emoji)
                                 .font(.system(size: 18))
                                 .frame(width: 42, height: 42)
                                 .background(Circle().fill(Color.white.opacity(0.85)))
@@ -125,101 +121,25 @@ struct TodayView: View {
         .padding(.top, 4)
     }
 
-    private func moveSection(_ dragged: String, over target: String) {
-        var visible = visibleSectionOrder
-        guard let fromIdx = visible.firstIndex(of: dragged),
-              let toIdx = visible.firstIndex(of: target),
-              fromIdx != toIdx else { return }
-        visible.move(fromOffsets: IndexSet(integer: fromIdx), toOffset: toIdx > fromIdx ? toIdx + 1 : toIdx)
-        withAnimation(.easeInOut(duration: 0.2)) { applyVisibleOrder(visible) }
-    }
-
-    private func applyVisibleOrder(_ visible: [String]) {
-        if store.isWednesday {
-            store.sectionOrder = visible
-        } else {
-            let removalIndex = store.sectionOrder.firstIndex(of: "removal") ?? 1
-            var newOrder = visible
-            newOrder.insert("removal", at: min(removalIndex, newOrder.count))
-            store.sectionOrder = newOrder
-        }
-    }
-
-    private func sectionTitle(_ key: String) -> String {
-        switch key {
-        case "morning": return "Morning ritual"
-        case "removal": return "Hair removal"
-        case "evening": return "Evening ritual"
-        case "bikini": return "Bikini"
-        case "armpits": return "Armpits"
-        case "chest": return "Chest"
-        case "habits": return "Daily glow habits"
-        default: return key
-        }
-    }
-
-    private func sectionEmoji(_ key: String) -> String {
-        switch key {
-        case "morning": return "☀️"
-        case "removal": return "🪞"
-        case "evening": return "🌙"
-        case "bikini": return "🌸"
-        case "armpits": return "🫶"
-        case "chest": return "💗"
-        case "habits": return "🍵"
-        default: return "•"
-        }
-    }
-
-    @ViewBuilder
-    private func sectionView(for key: String) -> some View {
-        switch key {
-        case "morning":
-            SectionCard(title: "Morning ritual", emoji: "☀️", accent: .amGold, tint: .amTint,
-                        subtitle: "Same glow, every day",
-                        steps: Catalog.amSteps, infoProduct: $infoProduct, photoArea: "face",
-                        isReordering: isReordering)
-        case "removal":
-            if store.isWednesday {
-                SectionCard(title: "Hair removal", emoji: "🪞", accent: .rose, tint: .roseTint,
-                            subtitle: "Do this first, before the evening routine",
-                            steps: Catalog.removalSteps, infoProduct: $infoProduct,
-                            footer: "Tonight's mustache rules: no steam, no mask, no azelaic on the mustache area. Hyaluronic Concentrate is the only yes. 💋",
-                            photoArea: "removal",
-                            isReordering: isReordering)
-            }
-        case "evening":
-            SectionCard(title: "Evening ritual", emoji: "🌙", accent: .pmLav, tint: .pmTint,
-                        subtitle: "\(store.plan.emoji) \(store.plan.focus)",
-                        steps: store.plan.steps, infoProduct: $infoProduct, photoArea: "face",
-                        isReordering: isReordering)
-        case "bikini":
-            bodyCard(area: "bikini", title: "Bikini", emoji: "🌸")
-        case "armpits":
-            bodyCard(area: "armpits", title: "Armpits", emoji: "🫶",
-                     footer: "Rule: niacinamide, pads + azelaic only. Never glycolic, retinal or salicylic here.")
-        case "chest":
-            bodyCard(area: "chest", title: "Chest", emoji: "💗",
-                     subtitle: "Bumps are the purge — clears weeks 4–6 💪")
-        case "habits":
-            SectionCard(title: "Daily glow habits", emoji: "🍵", accent: .greenC,
-                        tint: Color(hex: 0xEAF3EC), subtitle: nil,
-                        steps: Catalog.habits, infoProduct: $infoProduct, photoArea: "habits",
-                        isReordering: isReordering)
-        default:
-            EmptyView()
-        }
-    }
-
-    private func bodyCard(area: String, title: String, emoji: String,
-                          subtitle: String? = "Daily care after shower", footer: String? = nil) -> some View {
-        SectionCard(title: title, emoji: emoji, accent: .bodyCoral, tint: .bodyTint,
-                    subtitle: subtitle,
-                    steps: Catalog.bodySteps(area: area, includeAzelaic: store.azelaicBodyDay),
+    private func sectionCard(for routine: Routine) -> some View {
+        SectionCard(title: routine.title, emoji: routine.emoji,
+                    accent: routine.theme.accent, tint: routine.theme.tint,
+                    subtitle: routine.subtitle,
+                    steps: store.visibleSteps(for: routine),
                     infoProduct: $infoProduct,
-                    footer: store.azelaicBodyDay ? footer : (footer ?? "Azelaic acid rests today — it's back tomorrow ✨"),
-                    photoArea: area,
+                    footer: dynamicFooter(for: routine),
+                    photoArea: routine.photoArea,
                     isReordering: isReordering)
+    }
+
+    /// A routine's own footer wins; otherwise routines with a resting
+    /// every-other-day step get the "rests today" note on off days.
+    private func dynamicFooter(for routine: Routine) -> String? {
+        if let footer = routine.footer { return footer }
+        if routine.steps.contains(where: \.everyOtherDay) && !store.azelaicBodyDay {
+            return "Azelaic acid rests today — it's back tomorrow ✨"
+        }
+        return nil
     }
 }
 
@@ -265,7 +185,7 @@ struct ProgressHeader: View {
                 Text(Calendar.current.isDateInToday(store.selectedDate) ? "Hi lovely ♡" : dayName)
                     .font(.system(.title2, design: .serif).weight(.semibold))
                     .foregroundColor(.ink)
-                Text("\(dayName), \(dateLine) · \(store.plan.emoji) \(store.plan.focus)")
+                Text("\(dayName), \(dateLine)\(store.todayFocus.map { " · \($0)" } ?? "")")
                     .font(.footnote).foregroundColor(.soft)
                 Text("\(store.doneCount) of \(store.allKeys.count) done · Week 3 — you're doing amazingly 🌷")
                     .font(.caption2).foregroundColor(.faint)
@@ -455,7 +375,7 @@ struct StepRowView: View {
     let accent: Color
     @Binding var infoProduct: Product?
 
-    private var product: Product? { step.productID.flatMap { Catalog.products[$0] } }
+    private var product: Product? { step.productID.flatMap { store.productInfo($0) } }
     private var label: String { step.label ?? product?.name ?? "Step" }
     private var done: Bool { store.isDone(step.key) }
     private var timer: RunningTimer? { store.timers[step.key] }

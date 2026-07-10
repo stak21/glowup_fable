@@ -29,3 +29,24 @@ extension Color {
     static let bgBottom = Color(hex: 0xFAECF0)
 }
 
+extension RoutineTheme {
+    var accent: Color {
+        switch self {
+        case .gold: return .amGold
+        case .lavender: return .pmLav
+        case .rose: return .rose
+        case .coral: return .bodyCoral
+        case .green: return .greenC
+        }
+    }
+    var tint: Color {
+        switch self {
+        case .gold: return .amTint
+        case .lavender: return .pmTint
+        case .rose: return .roseTint
+        case .coral: return .bodyTint
+        case .green: return Color(hex: 0xEAF3EC)
+        }
+    }
+}
+

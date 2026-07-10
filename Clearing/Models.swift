@@ -13,22 +13,55 @@ struct Product: Identifiable {
     let why: String
     let order: String
     var caution: String? = nil
+    var category: StepCategory? = nil
 }
 
-struct RStep: Identifiable {
-    let key: String                 // unique check id, e.g. "am0"
-    var productID: String? = nil    // key into Catalog.products
+/// Canonical skincare layering order — declaration order is the sort order
+/// used when auto-placing a product into a routine. nil category = manual position.
+enum StepCategory: String, Codable, CaseIterable, Identifiable {
+    case cleanser, exfoliant, treatment, moisturizer, spf, other
+    var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .cleanser: return "Cleanser"
+        case .exfoliant: return "Exfoliant"
+        case .treatment: return "Treatment"
+        case .moisturizer: return "Moisturizer"
+        case .spf: return "SPF"
+        case .other: return "Extras"
+        }
+    }
+    var sortRank: Int { Self.allCases.firstIndex(of: self) ?? 0 }
+}
+
+struct RStep: Identifiable, Codable, Equatable {
+    var key: String                 // unique check id, e.g. "am0"; opaque everywhere
+    var productID: String? = nil    // key into Catalog.products or the shop catalog
     var label: String? = nil        // custom label (removal steps)
     var wait: Int? = nil            // minutes to count down
     var note: String? = nil
-    var everyOtherDay = false
+    var everyOtherDay = false       // step is active only on azelaicBodyDay
+    var category: StepCategory? = nil
     var id: String { key }
 }
 
-struct DayPlan {
-    let focus: String
-    let emoji: String
-    let steps: [RStep]
+enum RoutineTheme: String, Codable, CaseIterable, Identifiable {
+    case gold, lavender, rose, coral, green
+    var id: String { rawValue }
+}
+
+struct Routine: Identifiable, Codable, Equatable {
+    var id: String                  // migrated: "morning", "evening-mon"…; new: UUID string
+    var title: String
+    var emoji: String
+    var subtitle: String? = nil
+    var focus: String? = nil        // header line, e.g. "✨ Glycolic Glow"
+    var footer: String? = nil       // caution chip under the card
+    var planNote: String? = nil     // Week-tab note (not shown on Today)
+    var days: Set<Int>              // 0=Sun … 6=Sat (jsWeekday convention)
+    var photoArea: String? = nil    // existing PhotoAreas key, or nil for no photo prompt
+    var theme: RoutineTheme = .rose
+    var steps: [RStep]
 }
 
 struct Reminder: Identifiable, Codable, Equatable {
