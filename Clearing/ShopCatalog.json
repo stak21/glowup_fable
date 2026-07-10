@@ -9,7 +9,7 @@
     "order": "After cleansing and toning, before moisturizer — plays nicely with almost everything.",
     "effects": ["brightening", "darkSpots"],
     "price": "~$11",
-    "storeURL": "https://www.amazon.com/s?k=the+ordinary+alpha+arbutin+2%25"
+    "storeURL": "https://www.amazon.com/Ordinary-Alpha-Arbutin-2-30ml/dp/B06XCZFCFZ"
   },
   {
     "id": "good-molecules-discoloration",
@@ -21,7 +21,7 @@
     "order": "Morning or night after cleansing, before heavier layers.",
     "effects": ["darkSpots", "brightening"],
     "price": "~$14",
-    "storeURL": "https://www.amazon.com/s?k=good+molecules+discoloration+correcting+serum"
+    "storeURL": "https://www.amazon.com/GOOD-MOLECULES-Discoloration-Correcting-Serum/dp/B08RJ4ZHXJ"
   },
   {
     "id": "naturium-tranexamic",
@@ -33,7 +33,7 @@
     "order": "After watery serums, before moisturizer; start 3 nights a week.",
     "effects": ["darkSpots", "brightening"],
     "price": "~$20",
-    "storeURL": "https://www.amazon.com/s?k=naturium+tranexamic+acid+5"
+    "storeURL": "https://www.amazon.com/Tranexamic-Topical-Acid-5-Melasma/dp/B086YZRHH7"
   },
   {
     "id": "truskin-vitamin-c",
@@ -45,7 +45,7 @@
     "order": "Morning, after cleansing — then SPF locks in the benefit.",
     "effects": ["brightening", "antiAging"],
     "price": "~$20",
-    "storeURL": "https://www.amazon.com/s?k=truskin+vitamin+c+serum"
+    "storeURL": "https://www.amazon.com/TruSkin-Naturals-Vitamin-Topical-Hyaluronic/dp/B01M4MCUAF"
   },
   {
     "id": "lrp-mela-b3",
@@ -57,7 +57,7 @@
     "order": "Once daily after cleansing, before moisturizer.",
     "effects": ["darkSpots", "brightening"],
     "price": "~$45",
-    "storeURL": "https://www.amazon.com/s?k=la+roche+posay+mela+b3+serum"
+    "storeURL": "https://www.amazon.com/Roche-Posay-Anti-Aging-Niacinamide-Discoloration-Long-Lasting/dp/B0CM4B43DZ"
   },
   {
     "id": "urban-skin-rx-even-tone",
@@ -69,7 +69,7 @@
     "order": "Use as your cleanser a few nights a week; leave on 1–2 minutes as a mini mask.",
     "effects": ["darkSpots", "texture"],
     "price": "~$24",
-    "storeURL": "https://www.amazon.com/s?k=urban+skin+rx+even+tone+cleansing+bar"
+    "storeURL": "https://www.amazon.com/Urban-Skin-Even-Tone-Cleansing/dp/B07CKMBDF9"
   },
   {
     "id": "kojie-san-soap",
@@ -82,7 +82,7 @@
     "caution": "Can be drying — leave on under a minute at first and moisturize after.",
     "effects": ["darkSpots", "body"],
     "price": "~$12",
-    "storeURL": "https://www.amazon.com/s?k=kojie+san+kojic+acid+soap"
+    "storeURL": "https://www.amazon.com/Kojie-San-Skin-Brightening-Hyperpigmentation/dp/B00R602KOQ"
   },
   {
     "id": "paulas-choice-bha",
@@ -95,7 +95,7 @@
     "caution": "Increases sun sensitivity — SPF every morning.",
     "effects": ["pores", "acne", "texture"],
     "price": "~$35",
-    "storeURL": "https://www.amazon.com/s?k=paulas+choice+2%25+bha+liquid+exfoliant"
+    "storeURL": "https://www.amazon.com/Paulas-Choice-SKIN-PERFECTING-Exfoliant-Facial-Blackheads/dp/B00949CTQQ"
   },
   {
     "id": "cosrx-bha-blackhead",
@@ -108,7 +108,7 @@
     "caution": "Increases sun sensitivity — SPF every morning.",
     "effects": ["pores", "texture"],
     "price": "~$25",
-    "storeURL": "https://www.amazon.com/s?k=cosrx+bha+blackhead+power+liquid"
+    "storeURL": "https://www.amazon.com/COSRX-BLACKHEAD-POWER-LIQUID-100ml/dp/B073P7L1NZ"
   },
   {
     "id": "differin-gel",
@@ -121,7 +121,7 @@
     "caution": "Expect a 4–6 week adjustment period; not for use while pregnant.",
     "effects": ["acne", "texture", "antiAging"],
     "price": "~$15",
-    "storeURL": "https://www.amazon.com/s?k=differin+gel+adapalene+0.1"
+    "storeURL": "https://www.amazon.com/Differin-Adapalene-0-1-Acne-Treatment/dp/B07L1PHSY9"
   },
   {
     "id": "cerave-acne-foaming",
@@ -134,7 +134,7 @@
     "caution": "Bleaches towels and pillowcases — use white ones.",
     "effects": ["acne"],
     "price": "~$15",
-    "storeURL": "https://www.amazon.com/s?k=cerave+acne+foaming+cream+cleanser"
+    "storeURL": "https://www.amazon.com/CeraVe-Treatment-Hyaluronic-Niacinamide-Sensitive/dp/B07YLJPMC3"
   },
   {
     "id": "panoxyl-wash",
@@ -147,7 +147,7 @@
     "caution": "Bleaches fabric; 10% can be drying on the face — the 4% version is gentler there.",
     "effects": ["acne", "body"],
     "price": "~$12",
-    "storeURL": "https://www.amazon.com/s?k=panoxyl+10+acne+foaming+wash"
+    "storeURL": "https://www.amazon.com/PanOxyl-Foaming-Peroxide-Strength-Antimicrobial/dp/B081KL2QYJ"
   },
   {
     "id": "hero-mighty-patch",
@@ -159,7 +159,7 @@
     "order": "On clean, dry skin as the last step at night — skincare goes around, not under.",
     "effects": ["acne"],
     "price": "~$13",
-    "storeURL": "https://www.amazon.com/s?k=hero+mighty+patch+original"
+    "storeURL": "https://www.amazon.com/Mighty-Patch-Hydrocolloid-Absorbing-count/dp/B074PVTPBW"
   },
   {
     "id": "to-niacinamide",
@@ -171,7 +171,7 @@
     "order": "Morning or night after cleansing; layers under everything.",
     "effects": ["pores", "acne", "brightening"],
     "price": "~$7",
-    "storeURL": "https://www.amazon.com/s?k=the+ordinary+niacinamide+10+zinc"
+    "storeURL": "https://www.amazon.com/Ordinary-Niacinamide-10-Zinc-30ml/dp/B01MDTVZTZ"
   },
   {
     "id": "lrp-effaclar-duo",
@@ -184,7 +184,7 @@
     "caution": "Contains benzoyl peroxide — can bleach fabric.",
     "effects": ["acne", "darkSpots"],
     "price": "~$32",
-    "storeURL": "https://www.amazon.com/s?k=la+roche+posay+effaclar+duo"
+    "storeURL": "https://www.amazon.com/dp/B004L8J15C"
   },
   {
     "id": "to-lactic-acid",
@@ -197,7 +197,7 @@
     "caution": "Increases sun sensitivity — SPF every morning.",
     "effects": ["texture", "brightening"],
     "price": "~$9",
-    "storeURL": "https://www.amazon.com/s?k=the+ordinary+lactic+acid+10+ha"
+    "storeURL": "https://www.amazon.com/Ordinary-High-Strength-Exfoliating-Smoother-Brighter/dp/B07NDNPCKW"
   },
   {
     "id": "to-glycolic-toner",
@@ -210,7 +210,7 @@
     "caution": "Increases sun sensitivity — SPF every morning. Skip on freshly shaved skin.",
     "effects": ["texture", "brightening", "body"],
     "price": "~$13",
-    "storeURL": "https://www.amazon.com/s?k=the+ordinary+glycolic+acid+7+toner"
+    "storeURL": "https://www.amazon.com/Ordinary-Exfoliating-Brightening-Smoothing-Even-Looking/dp/B071914GGL"
   },
   {
     "id": "fab-kp-bump-eraser",
@@ -222,7 +222,7 @@
     "order": "In the shower 2–3 times a week on damp skin, then moisturize.",
     "effects": ["body", "texture"],
     "price": "~$30",
-    "storeURL": "https://www.amazon.com/s?k=first+aid+beauty+kp+bump+eraser"
+    "storeURL": "https://www.amazon.com/First-Aid-Beauty-Eraser-Scrub/dp/B07XG6BKCV"
   },
   {
     "id": "amlactin-lotion",
@@ -234,7 +234,7 @@
     "order": "Daily after showering; not right after shaving.",
     "effects": ["body", "texture", "hydration"],
     "price": "~$21",
-    "storeURL": "https://www.amazon.com/s?k=amlactin+daily+moisturizing+lotion"
+    "storeURL": "https://www.amazon.com/AmLactin-Daily-Moisturizing-Lotion-Paraben/dp/B09QXQ8JR6"
   },
   {
     "id": "cosrx-aha-bha-toner",
@@ -246,7 +246,7 @@
     "order": "After cleansing, before serums; gentle enough for near-daily use.",
     "effects": ["texture", "pores"],
     "price": "~$15",
-    "storeURL": "https://www.amazon.com/s?k=cosrx+aha+bha+clarifying+treatment+toner"
+    "storeURL": "https://www.amazon.com/COSRX-Clarifying-Treatment-Toner-150ml/dp/B073P6BPF5"
   },
   {
     "id": "ddg-alpha-beta-pads",
@@ -259,7 +259,7 @@
     "caution": "Increases sun sensitivity — SPF every morning.",
     "effects": ["texture", "antiAging", "brightening"],
     "price": "~$92",
-    "storeURL": "https://www.amazon.com/s?k=dr+dennis+gross+alpha+beta+universal+daily+peel"
+    "storeURL": "https://www.amazon.com/Dr-Dennis-Gross-Skincare-Universal/dp/B00EFYG5VU"
   },
   {
     "id": "cosrx-snail-mucin",
@@ -271,7 +271,7 @@
     "order": "After toning, before heavier serums and creams.",
     "effects": ["hydration", "soothing", "texture"],
     "price": "~$14",
-    "storeURL": "https://www.amazon.com/s?k=cosrx+advanced+snail+96+mucin+essence"
+    "storeURL": "https://www.amazon.com/COSRX-Repairing-Hydrating-Secretion-Phthalates/dp/B00PBX3L7K"
   },
   {
     "id": "neutrogena-hydro-boost",
@@ -283,7 +283,7 @@
     "order": "Last skincare step at night, or before SPF in the morning.",
     "effects": ["hydration"],
     "price": "~$20",
-    "storeURL": "https://www.amazon.com/s?k=neutrogena+hydro+boost+water+gel"
+    "storeURL": "https://www.amazon.com/Neutrogena-Hydro-Hyaluronic-Hydrating-Moisturizer/dp/B00NR1YQHM"
   },
   {
     "id": "cerave-moisturizing-cream",
@@ -295,7 +295,7 @@
     "order": "Face: last step. Body: after every shower.",
     "effects": ["hydration", "body", "soothing"],
     "price": "~$17",
-    "storeURL": "https://www.amazon.com/s?k=cerave+moisturizing+cream+tub"
+    "storeURL": "https://www.amazon.com/CeraVe-Moisturizing-Cream-Daily-Moisturizer/dp/B00TTD9BRC"
   },
   {
     "id": "lrp-cicaplast-b5",
@@ -307,7 +307,7 @@
     "order": "As your moisturizer (or over it) on recovery nights; skip actives those nights.",
     "effects": ["soothing", "hydration"],
     "price": "~$16",
-    "storeURL": "https://www.amazon.com/s?k=la+roche+posay+cicaplast+baume+b5"
+    "storeURL": "https://www.amazon.com/Roche-Posay-Cicaplast-Baume-Soothing-Repairing/dp/B072MK7BN2"
   },
   {
     "id": "to-hyaluronic",
@@ -319,7 +319,7 @@
     "order": "On damp skin right after cleansing, then seal with moisturizer.",
     "effects": ["hydration"],
     "price": "~$9",
-    "storeURL": "https://www.amazon.com/s?k=the+ordinary+hyaluronic+acid+2+b5"
+    "storeURL": "https://www.amazon.com/Ordinary-Hyaluronic-Acid-2-30ml/dp/B01MYEZPC8"
   },
   {
     "id": "laneige-water-sleeping-mask",
@@ -331,7 +331,7 @@
     "order": "As the last step at night, 2–3 times a week instead of (or over) moisturizer.",
     "effects": ["hydration", "brightening"],
     "price": "~$29",
-    "storeURL": "https://www.amazon.com/s?k=laneige+water+sleeping+mask"
+    "storeURL": "https://www.amazon.com/LANEIGE-111975281-Water-Sleeping-Mask/dp/B07XFLXW3S"
   },
   {
     "id": "drjart-cicapair",
@@ -343,7 +343,7 @@
     "order": "After serums, in place of or before moisturizer.",
     "effects": ["soothing"],
     "price": "~$52",
-    "storeURL": "https://www.amazon.com/s?k=dr+jart+cicapair+tiger+grass+color+correcting"
+    "storeURL": "https://www.amazon.com/Dr-Jart-Cicapair-Correcting-Treatment/dp/B07DR5816K"
   },
   {
     "id": "aveeno-calm-restore",
@@ -355,7 +355,7 @@
     "order": "Morning and night as your moisturizer on sensitive days.",
     "effects": ["soothing", "hydration"],
     "price": "~$13",
-    "storeURL": "https://www.amazon.com/s?k=aveeno+calm+restore+oat+gel+moisturizer"
+    "storeURL": "https://www.amazon.com/Aveeno-Moisturizer-Lightweight-Hypoallergenic-Paraben-Free/dp/B08D9MSGVQ"
   },
   {
     "id": "avene-thermal-water",
@@ -367,7 +367,7 @@
     "order": "Anytime skin feels reactive; pat in, don't let it evaporate off.",
     "effects": ["soothing"],
     "price": "~$14",
-    "storeURL": "https://www.amazon.com/s?k=avene+thermal+spring+water+spray"
+    "storeURL": "https://www.amazon.com/Avene-Thermal-Water-Soothing-Sensitive/dp/B002D48QUC"
   },
   {
     "id": "lrp-toleriane-cleanser",
@@ -379,7 +379,7 @@
     "order": "Morning and night as your first step.",
     "effects": ["hydration", "soothing"],
     "price": "~$17",
-    "storeURL": "https://www.amazon.com/s?k=la+roche+posay+toleriane+hydrating+gentle+cleanser"
+    "storeURL": "https://www.amazon.com/Roche-Posay-Toleriane-Hydrating-Gentle-Cleanser/dp/B01N7T7JKJ"
   },
   {
     "id": "to-granactive-retinoid",
@@ -392,7 +392,7 @@
     "caution": "Not for use while pregnant; SPF every morning.",
     "effects": ["antiAging", "texture", "acne"],
     "price": "~$11",
-    "storeURL": "https://www.amazon.com/s?k=the+ordinary+granactive+retinoid+2+emulsion"
+    "storeURL": "https://www.amazon.com/Ordinary-Granactive-Retinoid-Emulsion-Previously/dp/B071HHSMTT"
   },
   {
     "id": "roc-retinol-correxion",
@@ -405,7 +405,7 @@
     "caution": "Not for use while pregnant; SPF every morning.",
     "effects": ["antiAging"],
     "price": "~$25",
-    "storeURL": "https://www.amazon.com/s?k=roc+retinol+correxion+deep+wrinkle+night+cream"
+    "storeURL": "https://www.amazon.com/RoC-Correxion-Anti-Aging-Oil-Free-Non-Comedogenic/dp/B00027DMI8"
   },
   {
     "id": "cerave-resurfacing-retinol",
@@ -418,7 +418,7 @@
     "caution": "Not for use while pregnant; SPF every morning.",
     "effects": ["antiAging", "texture", "darkSpots"],
     "price": "~$20",
-    "storeURL": "https://www.amazon.com/s?k=cerave+resurfacing+retinol+serum"
+    "storeURL": "https://www.amazon.com/CeraVe-Post-Acne-Refining-Resurfacing-Brightening/dp/B07VWSN95S"
   },
   {
     "id": "eltamd-uv-clear",
@@ -430,7 +430,7 @@
     "order": "Every morning, last step, ideally two finger-lengths' worth.",
     "effects": ["acne", "darkSpots", "antiAging"],
     "price": "~$41",
-    "storeURL": "https://www.amazon.com/s?k=eltamd+uv+clear+spf+46"
+    "storeURL": "https://www.amazon.com/EltaMD-Clear-Sunscreen-Dermatologist-Recommended/dp/B0DM3MN243"
   },
   {
     "id": "boj-relief-sun",
@@ -454,7 +454,7 @@
     "order": "Every morning, last skincare step / first makeup step.",
     "effects": ["pores", "antiAging"],
     "price": "~$38",
-    "storeURL": "https://www.amazon.com/s?k=supergoop+unseen+sunscreen+spf+40"
+    "storeURL": "https://www.amazon.com/Supergoop-Womens-Mineral-Unseen-Sunscreen/dp/B0D79Q3N64"
   },
   {
     "id": "lrp-anthelios",
@@ -466,7 +466,7 @@
     "order": "Every morning; generously on any exposed body areas you're treating.",
     "effects": ["darkSpots", "antiAging", "body"],
     "price": "~$26",
-    "storeURL": "https://www.amazon.com/s?k=la+roche+posay+anthelios+melt+in+milk+spf+60"
+    "storeURL": "https://www.amazon.com/Roche-Posay-Anthelios-Melt-Sunscreen-Milk/dp/B002CML1VG"
   },
   {
     "id": "naturium-glycolic-body-wash",
@@ -478,7 +478,7 @@
     "order": "A few showers a week; let it sit a minute before rinsing.",
     "effects": ["body", "texture", "acne"],
     "price": "~$16",
-    "storeURL": "https://www.amazon.com/s?k=naturium+glow+getter+multi+oil+body+wash"
+    "storeURL": "https://www.amazon.com/Getter-Multi-Oil-Hydrating-Naturium-Cleanser/dp/B0B1PDDLGZ"
   },
   {
     "id": "megababe-thigh-rescue",
@@ -490,7 +490,7 @@
     "order": "Swipe on before dresses, workouts or hot days.",
     "effects": ["body", "soothing"],
     "price": "~$12",
-    "storeURL": "https://www.amazon.com/s?k=megababe+thigh+rescue+anti+chafe+stick"
+    "storeURL": "https://www.amazon.com/Megababe-Anti-Chafe-Prevents-Irritation-Bra-Lines/dp/B07CZWYY4H"
   },
   {
     "id": "to-azelaic",
@@ -502,6 +502,6 @@
     "order": "Morning or night after serums; can sit alongside most actives.",
     "effects": ["soothing", "acne", "darkSpots", "brightening"],
     "price": "~$10",
-    "storeURL": "https://www.amazon.com/s?k=the+ordinary+azelaic+acid+suspension+10"
+    "storeURL": "https://www.amazon.com/Ordinary-Azelaic-Acid-Suspension-30ml/dp/B06WD5J8KY"
   }
 ]

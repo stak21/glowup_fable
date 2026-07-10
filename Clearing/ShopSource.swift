@@ -24,7 +24,7 @@ struct BundledShopCatalog: ShopProductSource {
 
 enum Affiliate {
     /// Set to your Associates tag (e.g. "clearing-20") once the account exists.
-    static let amazonTag: String? = nil
+    static let amazonTag: String? = "glowup02f6-20"
 
     static func url(for product: ShopProduct) -> URL? {
         guard let url = product.storeURL else { return nil }
