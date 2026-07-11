@@ -11,6 +11,7 @@ import SwiftUI
 struct BasicsPage: Identifiable {
     let emoji: String
     let title: String
+    let badge: String   // where this fits in a starter routine
     let when: String
     let what: String
     let tip: String
@@ -18,26 +19,32 @@ struct BasicsPage: Identifiable {
 
     static let all: [BasicsPage] = [
         BasicsPage(emoji: "🫧", title: "Cleanser",
+                   badge: "Core step",
                    when: "Morning + night · always step 1",
                    what: "Washes away oil, sunscreen and the day so everything you apply after can actually reach your skin.",
                    tip: "Gentle is the goal — if your face feels squeaky or tight afterwards, it's too harsh."),
         BasicsPage(emoji: "✨", title: "Exfoliant",
+                   badge: "Start with one active",
                    when: "A few nights a week · after cleansing",
                    what: "Acids like glycolic or salicylic dissolve the layer of dead skin that makes you look dull and clogs pores.",
                    tip: "Start slow — two nights a week — and never stack two acids on the same night."),
         BasicsPage(emoji: "💧", title: "Treatment",
+                   badge: "Start with one active",
                    when: "Daily · the middle of your routine",
                    what: "Serums are concentrated actives with one job each: vitamin C brightens, niacinamide calms, retinoids renew.",
                    tip: "Add one new active at a time, so you know what's working — or what's irritating."),
         BasicsPage(emoji: "🧴", title: "Moisturizer",
+                   badge: "Core step",
                    when: "Morning + night · near the end",
                    what: "Seals everything in and keeps your skin barrier happy. Hydrated skin heals faster and irritates slower.",
                    tip: "Oily skin needs it too — skipping moisturizer often makes oil worse."),
         BasicsPage(emoji: "☀️", title: "SPF",
+                   badge: "Core step",
                    when: "Every morning · always last",
                    what: "Sunscreen is the single biggest anti-aging and anti-dark-spot step there is. Nothing else works if you skip it.",
                    tip: "A nickel-sized amount for the face, every single day — clouds don't count as protection."),
         BasicsPage(emoji: "🌸", title: "Extras",
+                   badge: "Nice to have",
                    when: "As needed",
                    what: "Masks, eye creams, steam and tools — the treat-yourself layer that supports the core steps.",
                    tip: "Nice to have, never required. A solid core routine beats a drawer full of extras."),
@@ -133,6 +140,13 @@ struct SkincareBasicsView: View {
                     Text(p.title)
                         .font(.system(.title3, design: .serif).weight(.semibold))
                         .foregroundColor(.ink)
+                    Spacer()
+                    Text(p.badge.uppercased())
+                        .font(.system(size: 9, weight: .heavy))
+                        .foregroundColor(.roseDeep)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(Color.roseTint))
                 }
                 Text(p.when.uppercased())
                     .font(.caption2.weight(.heavy))

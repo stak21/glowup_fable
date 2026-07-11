@@ -126,6 +126,13 @@ struct KitSheetContent: View {
                 }
             }
 
+            Text("🌱 Starter kits keep it simple: the core steps plus one active matched to your goal. More actives, exfoliants and extras layer in later, once your skin has settled.")
+                .font(.footnote)
+                .foregroundColor(.soft)
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.8)))
+
             HStack {
                 Text("Estimated total")
                     .font(.subheadline.weight(.semibold))
