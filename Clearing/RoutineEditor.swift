@@ -109,15 +109,25 @@ struct RoutineManagerSheet: View {
                     Text(routine.title)
                         .font(.subheadline.weight(.semibold))
                         .foregroundColor(.ink)
+                    if let focus = routine.focus ?? routine.subtitle {
+                        Text(focus)
+                            .font(.caption2)
+                            .foregroundColor(.soft)
+                            .lineLimit(1)
+                    }
                     HStack(spacing: 3) {
                         ForEach(displayDayOrder, id: \.self) { d in
+                            let active = routine.days.contains(d)
                             Text(dayLetters[d])
-                                .font(.system(size: 9, weight: .heavy))
-                                .foregroundColor(routine.days.contains(d) ? routine.theme.accent : .faint)
+                                .font(.system(size: 8, weight: .heavy))
+                                .foregroundColor(active ? .white : .faint)
+                                .frame(width: 15, height: 15)
+                                .background(Circle().fill(active ? routine.theme.accent : Color.clear))
                         }
                         Text("· \(routine.steps.count) steps")
                             .font(.system(size: 9, weight: .semibold))
                             .foregroundColor(.soft)
+                            .padding(.leading, 2)
                     }
                 }
                 Spacer(minLength: 8)
