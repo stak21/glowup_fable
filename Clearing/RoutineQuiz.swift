@@ -59,8 +59,9 @@ struct QuizSheet: View {
                 get: { store.quizResult != nil && step == 3 },
                 set: { if !$0 { step = 2 } }
             )) {
+                // Skincare 101 first, then the kit reveal.
                 if let kit = recommendedKit {
-                    resultView(kit)
+                    BasicsGate { resultView(kit) }
                 }
             }
         }
@@ -171,6 +172,18 @@ struct QuizSheet: View {
             Text(sub)
                 .font(.subheadline)
                 .foregroundColor(.soft)
+        }
+    }
+
+    /// Shows Skincare 101, then pushes the quiz result when the user
+    /// continues (or skips).
+    private struct BasicsGate<Result: View>: View {
+        @ViewBuilder let result: () -> Result
+        @State private var showResult = false
+
+        var body: some View {
+            SkincareBasicsView(onContinue: { showResult = true })
+                .navigationDestination(isPresented: $showResult) { result() }
         }
     }
 
