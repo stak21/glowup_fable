@@ -585,16 +585,20 @@ struct ProductPickerSheet: View {
         let name: String
         let detail: String
         let category: StepCategory?
+        let inShop: Bool        // heartable — the wishlist can only show shop products
     }
 
     private var entries: [Entry] {
+        let shopIDs = Set(store.shopProducts.map(\.id))
         var all: [Entry] = Catalog.products.map { slug, p in
-            Entry(id: slug, name: p.name, detail: p.tag, category: p.category)
+            Entry(id: slug, name: p.name, detail: p.tag, category: p.category,
+                  inShop: shopIDs.contains(slug))
         }
         let builtinIDs = Set(all.map(\.id))
         all += store.shopProducts
             .filter { !builtinIDs.contains($0.id) }
-            .map { Entry(id: $0.id, name: $0.name, detail: "\($0.brand) · \($0.price)", category: $0.category) }
+            .map { Entry(id: $0.id, name: $0.name, detail: "\($0.brand) · \($0.price)",
+                         category: $0.category, inShop: true) }
         var result = all.sorted { $0.name < $1.name }
         if let category {
             result = result.filter { $0.category == category }
@@ -672,35 +676,57 @@ struct ProductPickerSheet: View {
 
                     VStack(spacing: 8) {
                         ForEach(entries) { entry in
-                            Button {
-                                onPick(entry.id, entry.category ?? initialCategory)
-                                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                dismiss()
-                            } label: {
-                                HStack(spacing: 10) {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(entry.name)
-                                            .font(.subheadline.weight(.semibold))
-                                            .foregroundColor(.ink)
-                                        Text(entry.detail)
-                                            .font(.caption)
-                                            .foregroundColor(.soft)
-                                            .lineLimit(1)
+                            HStack(spacing: 10) {
+                                Button {
+                                    onPick(entry.id, entry.category ?? initialCategory)
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                    dismiss()
+                                } label: {
+                                    HStack(spacing: 10) {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(entry.name)
+                                                .font(.subheadline.weight(.semibold))
+                                                .foregroundColor(.ink)
+                                            Text(entry.detail)
+                                                .font(.caption)
+                                                .foregroundColor(.soft)
+                                                .lineLimit(1)
+                                        }
+                                        Spacer(minLength: 8)
+                                        if let c = entry.category {
+                                            Text(c.displayName.uppercased())
+                                                .font(.system(size: 8, weight: .heavy))
+                                                .foregroundColor(.soft)
+                                        }
                                     }
-                                    Spacer(minLength: 8)
-                                    if let c = entry.category {
-                                        Text(c.displayName.uppercased())
-                                            .font(.system(size: 8, weight: .heavy))
-                                            .foregroundColor(.soft)
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+
+                                if entry.inShop {
+                                    Button {
+                                        store.toggleWishlist(entry.id)
+                                    } label: {
+                                        Image(systemName: store.isWishlisted(entry.id) ? "heart.fill" : "heart")
+                                            .font(.subheadline)
+                                            .foregroundColor(.rose)
                                     }
+                                    .buttonStyle(.plain)
+                                }
+
+                                Button {
+                                    onPick(entry.id, entry.category ?? initialCategory)
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                    dismiss()
+                                } label: {
                                     Image(systemName: "plus.circle.fill")
                                         .foregroundColor(.rose)
                                 }
-                                .padding(12)
-                                .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
-                                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.lineC, lineWidth: 1))
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
+                            .padding(12)
+                            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
+                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.lineC, lineWidth: 1))
                         }
                     }
                 }
