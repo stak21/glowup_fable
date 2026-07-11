@@ -615,46 +615,61 @@ struct ProductSheet: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(RoundedRectangle(cornerRadius: 14).fill(Color.roseTint))
                 }
-                if let shop = store.shopProduct(selection.productID) {
-                    VStack(spacing: 8) {
-                        if let url = Affiliate.url(for: shop) {
-                            Link(destination: url) {
-                                Label("Running low? Reorder · \(shop.price)", systemImage: "arrow.up.right")
-                                    .font(.subheadline.weight(.heavy))
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 13)
-                                    .background(Capsule().fill(Color.roseDeep))
-                            }
-                        }
-                        Button { store.toggleWishlist(selection.productID) } label: {
-                            Label(store.isWishlisted(selection.productID)
-                                    ? "On your shopping list"
-                                    : "Add to shopping list",
-                                  systemImage: store.isWishlisted(selection.productID) ? "heart.fill" : "heart")
-                                .font(.subheadline.weight(.heavy))
-                                .foregroundColor(.roseDeep)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 13)
-                                .background(Capsule().stroke(Color.roseDeep, lineWidth: 1.5))
-                        }
-                    }
-                    .padding(.top, 4)
-                }
-                Button { dismiss() } label: {
-                    Text("Got it ♡")
+            }
+            .padding(24)
+        }
+        // Actions pinned below the scroll so every button is visible even at
+        // the half-height detent.
+        .safeAreaInset(edge: .bottom) { actionFooter }
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+    }
+
+    private var actionFooter: some View {
+        VStack(spacing: 8) {
+            if let shop = store.shopProduct(selection.productID),
+               let url = Affiliate.url(for: shop) {
+                Link(destination: url) {
+                    Label("Running low? Reorder · \(shop.price)", systemImage: "arrow.up.right")
                         .font(.subheadline.weight(.heavy))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 13)
+                        .background(Capsule().fill(Color.roseDeep))
+                }
+            }
+            HStack(spacing: 8) {
+                if store.shopProduct(selection.productID) != nil {
+                    Button { store.toggleWishlist(selection.productID) } label: {
+                        Label(store.isWishlisted(selection.productID) ? "On your list" : "Add to list",
+                              systemImage: store.isWishlisted(selection.productID) ? "heart.fill" : "heart")
+                            .font(.footnote.weight(.heavy))
+                            .foregroundColor(.roseDeep)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Capsule().stroke(Color.roseDeep, lineWidth: 1.5))
+                    }
+                }
+                Button { dismiss() } label: {
+                    Text("Got it ♡")
+                        .font(.footnote.weight(.heavy))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
                         .background(Capsule().fill(Color.rose))
                 }
-                .padding(.top, 4)
             }
-            .padding(24)
         }
-        .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
+        .padding(.horizontal, 24)
+        .padding(.top, 10)
+        .padding(.bottom, 6)
+        .background(
+            Rectangle().fill(Color.white)
+                .overlay(Rectangle().fill(Color.lineC).frame(height: 1), alignment: .top)
+                .ignoresSafeArea()
+        )
     }
 
     private func infoBlock(_ heading: String, _ text: String) -> some View {

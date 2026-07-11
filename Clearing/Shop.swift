@@ -359,41 +359,62 @@ struct ShopProductSheet: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(RoundedRectangle(cornerRadius: 14).fill(Color.roseTint))
                 }
-                Button { store.toggleWishlist(product.id) } label: {
-                    Text(store.isWishlisted(product.id) ? "On your list ♥" : "Add to list ♡")
-                        .font(.subheadline.weight(.heavy))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(Capsule().fill(store.isWishlisted(product.id) ? Color.roseDeep : Color.rose))
-                }
-                .padding(.top, 4)
-                Button { showRoutinePicker = true } label: {
-                    Text("Add to a routine ＋")
-                        .font(.subheadline.weight(.heavy))
-                        .foregroundColor(.roseDeep)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(Capsule().stroke(Color.roseDeep, lineWidth: 1.5))
-                }
-                if let url = Affiliate.url(for: product) {
-                    Link(destination: url) {
-                        Text("View at store \(product.price) ↗")
-                            .font(.subheadline.weight(.heavy))
-                            .foregroundColor(.roseDeep)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 13)
-                            .background(Capsule().stroke(Color.roseDeep, lineWidth: 1.5))
-                    }
-                }
             }
             .padding(24)
         }
+        // Actions pinned below the scroll so every button is visible even at
+        // the half-height detent (they used to scroll out of sight).
+        .safeAreaInset(edge: .bottom) { actionFooter }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .sheet(isPresented: $showRoutinePicker) {
             RoutinePickerSheet(productID: product.id)
         }
+    }
+
+    private var actionFooter: some View {
+        VStack(spacing: 8) {
+            Button { store.toggleWishlist(product.id) } label: {
+                Text(store.isWishlisted(product.id) ? "On your list ♥" : "Add to list ♡")
+                    .font(.subheadline.weight(.heavy))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 13)
+                    .background(Capsule().fill(store.isWishlisted(product.id) ? Color.roseDeep : Color.rose))
+            }
+            HStack(spacing: 8) {
+                Button { showRoutinePicker = true } label: {
+                    Text("Add to routine ＋")
+                        .font(.footnote.weight(.heavy))
+                        .foregroundColor(.roseDeep)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Capsule().stroke(Color.roseDeep, lineWidth: 1.5))
+                }
+                if let url = Affiliate.url(for: product) {
+                    Link(destination: url) {
+                        Text("View at store \(product.price) ↗")
+                            .font(.footnote.weight(.heavy))
+                            .foregroundColor(.roseDeep)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Capsule().stroke(Color.roseDeep, lineWidth: 1.5))
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 10)
+        .padding(.bottom, 6)
+        .background(
+            Rectangle().fill(Color.white)
+                .overlay(Rectangle().fill(Color.lineC).frame(height: 1), alignment: .top)
+                .ignoresSafeArea()
+        )
     }
 
     private func infoBlock(_ heading: String, _ text: String) -> some View {
