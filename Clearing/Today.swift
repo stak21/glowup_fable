@@ -13,9 +13,9 @@ struct RootView: View {
     @State private var selectedTab = Tab.today
 
     /// Today shows the fresh (new-user sandbox) profile; Legacy shows the
-    /// user's real routines. Week and Shop follow whichever was entered last.
+    /// user's real routines. Shop follows whichever was entered last.
     enum Tab: Int {
-        case today = 0, legacy, week, photos, shop, reminders
+        case today = 0, legacy, photos, shop, reminders
     }
 
     var body: some View {
@@ -26,9 +26,6 @@ struct RootView: View {
             TodayView()
                 .tabItem { Label("Legacy", systemImage: "clock.arrow.circlepath") }
                 .tag(Tab.legacy)
-            WeekPlanView()
-                .tabItem { Label("Week", systemImage: "calendar") }
-                .tag(Tab.week)
             PhotosView()
                 .tabItem { Label("Photos", systemImage: "camera.fill") }
                 .tag(Tab.photos)
@@ -625,104 +622,3 @@ struct ProductSheet: View {
         }
     }
 }
-
-// MARK: - Week plan
-
-struct WeekPlanView: View {
-    @EnvironmentObject var store: AppStore
-    private let displayDayOrder = [1, 2, 3, 4, 5, 6, 0]
-
-    private var everydayRoutines: [Routine] {
-        store.routines.filter { $0.days.count == 7 }
-    }
-
-    private func rotatingRoutines(on day: Int) -> [Routine] {
-        store.routines.filter { $0.days.count < 7 && $0.days.contains(day) }
-    }
-
-    private func dayName(_ day: Int) -> String {
-        Calendar.current.weekdaySymbols[day]
-    }
-
-    var body: some View {
-        ZStack {
-            LinearGradient(colors: [.bgTop, .bgBottom], startPoint: .top, endPoint: .bottom)
-                .ignoresSafeArea()
-            ScrollView {
-                VStack(alignment: .leading, spacing: 11) {
-                    Text("Your week at a glance")
-                        .font(.system(.title3, design: .serif).weight(.semibold))
-                        .foregroundColor(.ink)
-                    Text("Everyday routines run daily — day-specific ones rotate below.")
-                        .font(.footnote).foregroundColor(.soft)
-
-                    if !everydayRoutines.isEmpty {
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text("EVERY DAY")
-                                .font(.caption2.weight(.heavy)).foregroundColor(.soft)
-                            Text(everydayRoutines.map { "\($0.emoji) \($0.title)" }.joined(separator: "  ·  "))
-                                .font(.footnote).foregroundColor(.ink)
-                                .lineSpacing(4)
-                        }
-                        .padding(15)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(RoundedRectangle(cornerRadius: 20).fill(Color.white.opacity(0.75)))
-                    }
-
-                    ForEach(displayDayOrder, id: \.self) { day in
-                        let rotating = rotatingRoutines(on: day)
-                        let isToday = day == (Calendar.current.component(.weekday, from: Date()) - 1)
-                        VStack(alignment: .leading, spacing: 5) {
-                            HStack(spacing: 8) {
-                                Text(rotating.first?.emoji ?? "💗").font(.title3)
-                                Text(dayName(day))
-                                    .font(.system(.headline, design: .serif).weight(.semibold))
-                                    .foregroundColor(.ink)
-                                if isToday {
-                                    Text("TODAY")
-                                        .font(.system(size: 10, weight: .heavy))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 8).padding(.vertical, 2)
-                                        .background(Capsule().fill(Color.rose))
-                                }
-                                Spacer()
-                                if let focus = rotating.compactMap(\.focus).first {
-                                    Text(focus)
-                                        .font(.caption.weight(.heavy)).foregroundColor(.pmLav)
-                                }
-                            }
-                            if rotating.isEmpty {
-                                Text("Same as every day 💗").font(.footnote).foregroundColor(.soft)
-                            } else {
-                                Text(rotating.map(\.title).joined(separator: " + "))
-                                    .font(.footnote).foregroundColor(.ink)
-                                ForEach(rotating.compactMap(\.planNote), id: \.self) { note in
-                                    Text(note).font(.caption).foregroundColor(.soft)
-                                }
-                            }
-                        }
-                        .padding(15)
-                        .background(RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.white)
-                            .shadow(color: Color.rose.opacity(0.09), radius: 8, y: 3))
-                        .overlay(RoundedRectangle(cornerRadius: 20)
-                            .stroke(isToday ? Color.rose : Color.clear, lineWidth: 2))
-                    }
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("GOLDEN RULES")
-                            .font(.caption2.weight(.heavy)).foregroundColor(.pmLav)
-                        Text("Never skip SPF · Never retinal + acids the same night · Never steam on retinal nights · Completely dry skin always · No glycolic on armpits or chest · Minoxidil is always the last step · Spearmint tea daily 🍵")
-                            .font(.footnote).foregroundColor(.ink)
-                            .lineSpacing(4)
-                    }
-                    .padding(15)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(RoundedRectangle(cornerRadius: 20).fill(Color.pmTint))
-                }
-                .padding(16)
-            }
-        }
-    }
-}
-

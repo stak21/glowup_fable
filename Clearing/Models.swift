@@ -82,7 +82,7 @@ struct Routine: Identifiable, Codable, Equatable {
     var subtitle: String? = nil
     var focus: String? = nil        // header line, e.g. "✨ Glycolic Glow"
     var footer: String? = nil       // caution chip under the card
-    var planNote: String? = nil     // Week-tab note (not shown on Today)
+    var planNote: String? = nil     // plan note; currently unsurfaced (was shown on the removed Week tab)
     var days: Set<Int>              // 0=Sun … 6=Sat (jsWeekday convention)
     var photoArea: String? = nil    // existing PhotoAreas key, or nil for no photo prompt
     var theme: RoutineTheme = .rose
