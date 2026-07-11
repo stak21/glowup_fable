@@ -40,7 +40,7 @@ struct RootView: View {
         .onAppear {
             selectedTab = store.profile == .legacy ? .legacy : .today
         }
-        .onChange(of: selectedTab) { tab in
+        .onChange(of: selectedTab) { _, tab in
             if tab == .today { store.switchProfile(.fresh) }
             if tab == .legacy { store.switchProfile(.legacy) }
         }
@@ -320,6 +320,7 @@ struct SectionCard: View {
     @State private var open = true
     @State private var showCamera = false
     @State private var cameraUnavailable = false
+    @State private var saveFailed = false
 
     private var doneCount: Int { steps.filter { store.isDone($0.key) }.count }
     private var isComplete: Bool { !steps.isEmpty && doneCount == steps.count }
@@ -412,8 +413,11 @@ struct SectionCard: View {
             CameraPicker(overlayImage: photoArea.flatMap { area in
                 store.previousPhoto(for: area, excluding: store.dateKey(store.selectedDate)).flatMap(store.image(for:))
             }) { image in
-                store.savePhoto(image, area: photoArea ?? "routine", date: store.selectedDate)
-                withAnimation(.easeInOut(duration: 0.2)) { open = false }
+                if store.savePhoto(image, area: photoArea ?? "routine", date: store.selectedDate) {
+                    withAnimation(.easeInOut(duration: 0.2)) { open = false }
+                } else {
+                    saveFailed = true
+                }
             }
             .ignoresSafeArea()
         }
@@ -421,6 +425,11 @@ struct SectionCard: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("This device (or simulator) doesn't have a camera available.")
+        }
+        .alert("Couldn't save photo", isPresented: $saveFailed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Your photo couldn't be written to storage. Check free space and try again.")
         }
     }
 

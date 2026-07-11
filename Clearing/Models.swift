@@ -108,6 +108,7 @@ struct ProgressPhoto: Identifiable, Codable, Equatable {
     let area: String        // "face" | "chest" | "armpits" | "bikini"
     let dateKey: String     // yyyy-MM-dd
     let filename: String    // file on disk in the ProgressPhotos folder
+    var assetID: String? = nil  // Photos-library localIdentifier once backed up (nil = not backed up)
 }
 
 // MARK: - Shop

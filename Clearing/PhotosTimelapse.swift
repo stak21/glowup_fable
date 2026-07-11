@@ -35,6 +35,9 @@ struct PhotosView: View {
     @State private var viewerPhoto: ProgressPhoto?
     @State private var showTimelapse = false
     @State private var showDemo = false
+    @State private var saveFailed = false
+    @State private var isBackingUp = false
+    @State private var backupMessage: String?
 
     private var photosForArea: [ProgressPhoto] { store.photos(for: selectedArea) }
     private var areaTitle: String { PhotoAreas.all.first { $0.key == selectedArea }?.title ?? "" }
@@ -54,6 +57,31 @@ struct PhotosView: View {
                         .foregroundColor(.ink)
                     Text("A private, on-device timeline for each area. Nothing leaves your phone.")
                         .font(.footnote).foregroundColor(.soft)
+
+                    if store.photosPendingBackup > 0 {
+                        Button {
+                            isBackingUp = true
+                            store.backUpPhotosToLibrary { result in
+                                isBackingUp = false
+                                switch result {
+                                case .success(let count):
+                                    backupMessage = "Backed up \(count) photo\(count == 1 ? "" : "s") to your Photos library. They're safe there even if this app is ever deleted."
+                                case .failure(let error):
+                                    backupMessage = error.localizedDescription
+                                }
+                            }
+                        } label: {
+                            Label(isBackingUp
+                                    ? "Backing up…"
+                                    : "Back up \(store.photosPendingBackup) photo\(store.photosPendingBackup == 1 ? "" : "s") to your Photos library",
+                                  systemImage: "arrow.up.heart.fill")
+                                .font(.caption.weight(.heavy))
+                                .foregroundColor(.roseDeep)
+                                .padding(.horizontal, 12).padding(.vertical, 7)
+                                .background(Capsule().fill(Color.roseTint))
+                        }
+                        .disabled(isBackingUp)
+                    }
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
@@ -139,7 +167,9 @@ struct PhotosView: View {
         }
         .fullScreenCover(isPresented: $showCamera) {
             CameraPicker(overlayImage: store.previousPhoto(for: selectedArea, excluding: store.dateKey(Date())).flatMap(store.image(for:))) { image in
-                store.savePhoto(image, area: selectedArea)
+                if !store.savePhoto(image, area: selectedArea) {
+                    saveFailed = true
+                }
             }
             .ignoresSafeArea()
         }
@@ -160,6 +190,18 @@ struct PhotosView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text("This device (or simulator) doesn't have a camera available.")
+        }
+        .alert("Couldn't save photo", isPresented: $saveFailed) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Your photo couldn't be written to storage. Check free space and try again.")
+        }
+        .alert("Photo backup", isPresented: Binding(
+            get: { backupMessage != nil },
+            set: { if !$0 { backupMessage = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(backupMessage ?? "")
         }
     }
 }

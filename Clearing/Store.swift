@@ -5,6 +5,7 @@ import SwiftUI
 import Combine
 import UIKit
 import AudioToolbox
+import Photos
 
 // MARK: - Store
 
@@ -101,6 +102,17 @@ final class AppStore: ObservableObject {
             quizResult = saved
         }
         routines = Self.loadRoutines(for: profile)
+
+        // Photos written before v-file-protection used the iOS default (readable
+        // after first unlock); upgrade them to full lock-state encryption.
+        DispatchQueue.global(qos: .utility).async {
+            let files = (try? FileManager.default.contentsOfDirectory(
+                at: Self.photosDirectory, includingPropertiesForKeys: nil)) ?? []
+            for url in files {
+                try? FileManager.default.setAttributes(
+                    [.protectionKey: FileProtectionType.complete], ofItemAtPath: url.path)
+            }
+        }
     }
 
     // MARK: Profiles
@@ -385,8 +397,11 @@ final class AppStore: ObservableObject {
     func dateKey(_ date: Date) -> String { Self.keyFormatter.string(from: date) }
 
     /// One photo per area per day — retaking today's shot replaces the old one.
-    func savePhoto(_ image: UIImage, area: String, date: Date = Date()) {
-        guard let data = image.jpegData(compressionQuality: 0.85) else { return }
+    /// Returns false if the photo could not be written, so callers can tell the user.
+    @discardableResult
+    func savePhoto(_ image: UIImage, area: String, date: Date = Date()) -> Bool {
+        let prepared = Self.downscaled(image, maxDimension: 2048)
+        guard let data = prepared.jpegData(compressionQuality: 0.85) else { return false }
         let key = dateKey(date)
         if let existing = progressPhotos.first(where: { $0.area == area && $0.dateKey == key }) {
             deletePhoto(existing)
@@ -394,12 +409,29 @@ final class AppStore: ObservableObject {
         let filename = "\(area)-\(key)-\(UUID().uuidString).jpg"
         let url = Self.photosDirectory.appendingPathComponent(filename)
         do {
-            try data.write(to: url)
+            try data.write(to: url, options: [.atomic, .completeFileProtection])
         } catch {
-            return
+            return false
         }
         progressPhotos.append(ProgressPhoto(area: area, dateKey: key, filename: filename))
         savePhotosIndex()
+        return true
+    }
+
+    /// Camera output is 12MP+ (~3 MB each); 2048px is plenty for grids and timelapses
+    /// and keeps months of dailies from eating gigabytes.
+    private static func downscaled(_ image: UIImage, maxDimension: CGFloat) -> UIImage {
+        let pixelWidth = image.size.width * image.scale
+        let pixelHeight = image.size.height * image.scale
+        let largest = max(pixelWidth, pixelHeight)
+        guard largest > maxDimension else { return image }
+        let factor = maxDimension / largest
+        let newSize = CGSize(width: (pixelWidth * factor).rounded(), height: (pixelHeight * factor).rounded())
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: newSize, format: format).image { _ in
+            image.draw(in: CGRect(origin: .zero, size: newSize))
+        }
     }
 
     func deletePhoto(_ photo: ProgressPhoto) {
@@ -415,6 +447,58 @@ final class AppStore: ObservableObject {
     private func savePhotosIndex() {
         if let data = try? JSONEncoder().encode(progressPhotos) {
             UserDefaults.standard.set(data, forKey: "progressPhotos")
+        }
+    }
+
+    // MARK: Photo backup (opt-in copy to the user's Photos library)
+
+    var photosPendingBackup: Int {
+        progressPhotos.filter { $0.assetID == nil }.count
+    }
+
+    enum PhotoBackupError: LocalizedError {
+        case noAccess
+        var errorDescription: String? {
+            "Photos access is needed to back up. Allow it in Settings → Privacy → Photos → Clearing."
+        }
+    }
+
+    /// Copies every not-yet-backed-up photo into the Photos library, preserving each
+    /// shot's original date. User-initiated only — the app never uploads anything itself.
+    func backUpPhotosToLibrary(completion: @escaping (Result<Int, Error>) -> Void) {
+        let pending = progressPhotos.filter { $0.assetID == nil }
+        guard !pending.isEmpty else { completion(.success(0)); return }
+        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+            guard status == .authorized || status == .limited else {
+                DispatchQueue.main.async { completion(.failure(PhotoBackupError.noAccess)) }
+                return
+            }
+            var created: [(photoID: UUID, assetID: String)] = []
+            PHPhotoLibrary.shared().performChanges({
+                for photo in pending {
+                    let url = Self.photosDirectory.appendingPathComponent(photo.filename)
+                    guard let request = PHAssetChangeRequest.creationRequestForAssetFromImage(atFileURL: url)
+                    else { continue }
+                    request.creationDate = Self.keyFormatter.date(from: photo.dateKey)
+                    if let assetID = request.placeholderForCreatedAsset?.localIdentifier {
+                        created.append((photo.id, assetID))
+                    }
+                }
+            }) { success, error in
+                DispatchQueue.main.async {
+                    guard success else {
+                        completion(.failure(error ?? PhotoBackupError.noAccess))
+                        return
+                    }
+                    for (photoID, assetID) in created {
+                        if let idx = self.progressPhotos.firstIndex(where: { $0.id == photoID }) {
+                            self.progressPhotos[idx].assetID = assetID
+                        }
+                    }
+                    self.savePhotosIndex()
+                    completion(.success(created.count))
+                }
+            }
         }
     }
 }
