@@ -55,9 +55,17 @@ struct RootView: View {
 
 // MARK: - Today
 
+/// A tapped step's product plus its catalog ID — the sheet needs the ID for
+/// the store link and wishlist, which the display-only `Product` doesn't carry.
+struct ProductSelection: Identifiable {
+    let productID: String
+    let product: Product
+    var id: String { productID }
+}
+
 struct TodayView: View {
     @EnvironmentObject var store: AppStore
-    @State private var infoProduct: Product?
+    @State private var infoProduct: ProductSelection?
     @State private var isReordering = false
     @State private var draggedKey: String?
     @State private var showManager = false
@@ -109,7 +117,7 @@ struct TodayView: View {
             }
         }
         .onReceive(heartbeat) { _ in store.tick() }
-        .sheet(item: $infoProduct) { ProductSheet(product: $0) }
+        .sheet(item: $infoProduct) { ProductSheet(selection: $0) }
         .sheet(isPresented: $showManager) { RoutineManagerSheet() }
         .sheet(item: $editingRoutine) { RoutineEditorSheet(routine: $0, isNew: false) }
     }
@@ -312,7 +320,7 @@ struct SectionCard: View {
     let tint: Color
     let subtitle: String?
     let steps: [RStep]
-    @Binding var infoProduct: Product?
+    @Binding var infoProduct: ProductSelection?
     var footer: String? = nil
     var photoArea: String? = nil
     var isReordering: Bool = false
@@ -466,7 +474,7 @@ struct StepRowView: View {
     let step: RStep
     let num: Int
     let accent: Color
-    @Binding var infoProduct: Product?
+    @Binding var infoProduct: ProductSelection?
 
     private var product: Product? { step.productID.flatMap { store.productInfo($0) } }
     private var label: String { step.label ?? product?.name ?? "Step" }
@@ -536,8 +544,8 @@ struct StepRowView: View {
                     }
             )
 
-            if let product {
-                Button { infoProduct = product } label: {
+            if let product, let productID = step.productID {
+                Button { infoProduct = ProductSelection(productID: productID, product: product) } label: {
                     Text("why ♡")
                         .font(.system(size: 11, weight: .heavy))
                         .foregroundColor(accent)
@@ -581,8 +589,11 @@ struct PearlView: View {
 // MARK: - Product info sheet
 
 struct ProductSheet: View {
-    let product: Product
+    let selection: ProductSelection
+    @EnvironmentObject var store: AppStore
     @Environment(\.dismiss) private var dismiss
+
+    private var product: Product { selection.product }
 
     var body: some View {
         ScrollView {
@@ -603,6 +614,32 @@ struct ProductSheet: View {
                         .padding(13)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(RoundedRectangle(cornerRadius: 14).fill(Color.roseTint))
+                }
+                if let shop = store.shopProduct(selection.productID) {
+                    VStack(spacing: 8) {
+                        if let url = Affiliate.url(for: shop) {
+                            Link(destination: url) {
+                                Label("Running low? Reorder · \(shop.price)", systemImage: "arrow.up.right")
+                                    .font(.subheadline.weight(.heavy))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 13)
+                                    .background(Capsule().fill(Color.roseDeep))
+                            }
+                        }
+                        Button { store.toggleWishlist(selection.productID) } label: {
+                            Label(store.isWishlisted(selection.productID)
+                                    ? "On your shopping list"
+                                    : "Add to shopping list",
+                                  systemImage: store.isWishlisted(selection.productID) ? "heart.fill" : "heart")
+                                .font(.subheadline.weight(.heavy))
+                                .foregroundColor(.roseDeep)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 13)
+                                .background(Capsule().stroke(Color.roseDeep, lineWidth: 1.5))
+                        }
+                    }
+                    .padding(.top, 4)
                 }
                 Button { dismiss() } label: {
                     Text("Got it ♡")

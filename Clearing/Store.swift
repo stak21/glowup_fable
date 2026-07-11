@@ -221,6 +221,11 @@ final class AppStore: ObservableObject {
         visibleRoutines.compactMap(\.focus).first
     }
 
+    /// Shop-catalog entry for a product ID, if it exists there (store link, price…).
+    func shopProduct(_ id: String) -> ShopProduct? {
+        shopProductsByID[id]
+    }
+
     /// Unified product lookup across the built-in catalog and the shop catalog.
     func productInfo(_ id: String) -> Product? {
         if let builtIn = Catalog.products[id] { return builtIn }
