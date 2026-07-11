@@ -75,6 +75,24 @@ enum RoutinePlacement {
     }
 }
 
+enum DefaultWait {
+    /// Standard absorb-time when a product is added to a routine, matching the
+    /// seed data's conventions: strong AHAs 10 min, retinoids & azelaic 5,
+    /// serums 3, cleansers & pads 2, moisturizer/SPF/extras none.
+    /// Overridable per step in the step editor.
+    static func minutes(productText: String, category: StepCategory?) -> Int? {
+        let text = productText.lowercased()
+        if text.contains("glycolic") { return 10 }
+        if text.contains("retin") || text.contains("adapalene") { return 5 } // retinal/retinol/tretinoin…
+        if text.contains("azelaic") { return 5 }
+        switch category {
+        case .cleanser, .exfoliant: return 2
+        case .treatment: return 3
+        default: return nil
+        }
+    }
+}
+
 struct Routine: Identifiable, Codable, Equatable {
     var id: String                  // migrated: "morning", "evening-mon"…; new: UUID string
     var title: String

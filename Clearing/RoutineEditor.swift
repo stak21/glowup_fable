@@ -457,8 +457,12 @@ struct RoutineEditorSheet: View {
     }
 
     private func addStep(productID: String, category: StepCategory?) {
+        let info = store.productInfo(productID)
         let step = RStep(key: "st-" + UUID().uuidString.prefix(8).lowercased(),
-                         productID: productID, category: category)
+                         productID: productID,
+                         wait: DefaultWait.minutes(productText: "\(info?.name ?? "") \(info?.tag ?? "")",
+                                                   category: category),
+                         category: category)
         draft.steps.insert(step, at: RoutinePlacement.insertionIndex(for: category, in: draft.steps))
     }
 

@@ -259,12 +259,17 @@ final class AppStore: ObservableObject {
     }
 
     /// Adds a product as a new step, auto-placed by its category in canonical
-    /// layering order (cleanser → exfoliant → treatment → moisturizer → SPF → extras).
+    /// layering order (cleanser → exfoliant → treatment → moisturizer → SPF → extras),
+    /// with the standard wait for its type.
     func addProduct(_ productID: String, to routineID: String) {
         guard let idx = routines.firstIndex(where: { $0.id == routineID }) else { return }
-        let category = Catalog.products[productID]?.category ?? shopProductsByID[productID]?.category
+        let info = productInfo(productID)
+        let category = info?.category
         let step = RStep(key: "st-" + UUID().uuidString.prefix(8).lowercased(),
-                         productID: productID, category: category)
+                         productID: productID,
+                         wait: DefaultWait.minutes(productText: "\(info?.name ?? "") \(info?.tag ?? "")",
+                                                   category: category),
+                         category: category)
         var steps = routines[idx].steps
         steps.insert(step, at: RoutinePlacement.insertionIndex(for: category, in: steps))
         routines[idx].steps = steps
