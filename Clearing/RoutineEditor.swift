@@ -159,8 +159,13 @@ struct RoutineEditorSheet: View {
     let isNew: Bool
 
     @State private var editingStepKey: String?
-    @State private var pickerCategory: StepCategory?
-    @State private var showPicker = false
+    /// Item-driven picker presentation: the tapped slot's category rides along with
+    /// the sheet, so the filter can't lag a tap (as isPresented + separate state did).
+    private struct PickerRequest: Identifiable {
+        let category: StepCategory?
+        var id: String { category?.rawValue ?? "any" }
+    }
+    @State private var pickerRequest: PickerRequest?
     @State private var confirmDelete = false
     @State private var draggedStepKey: String?
     @FocusState private var titleFocused: Bool
@@ -298,8 +303,7 @@ struct RoutineEditorSheet: View {
                             placeholderSlot(category)
                         }
                         Button {
-                            pickerCategory = nil
-                            showPicker = true
+                            pickerRequest = PickerRequest(category: nil)
                         } label: {
                             Label("Add a product", systemImage: "plus")
                                 .font(.footnote.weight(.heavy))
@@ -345,8 +349,8 @@ struct RoutineEditorSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
-        .sheet(isPresented: $showPicker) {
-            ProductPickerSheet(initialCategory: pickerCategory,
+        .sheet(item: $pickerRequest) { request in
+            ProductPickerSheet(initialCategory: request.category,
                                onPick: { productID, category in
                                    addStep(productID: productID, category: category)
                                },
@@ -437,8 +441,7 @@ struct RoutineEditorSheet: View {
 
     private func placeholderSlot(_ category: StepCategory) -> some View {
         Button {
-            pickerCategory = category
-            showPicker = true
+            pickerRequest = PickerRequest(category: category)
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "plus.circle.dashed")
