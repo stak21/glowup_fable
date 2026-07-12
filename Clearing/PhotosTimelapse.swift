@@ -17,14 +17,24 @@ struct PhotoArea {
 }
 
 enum PhotoAreas {
-    static let all: [PhotoArea] = [
-        PhotoArea(key: "face", title: "Face", emoji: "🌷"),
-        PhotoArea(key: "chest", title: "Chest", emoji: "💗"),
-        PhotoArea(key: "armpits", title: "Armpits", emoji: "🫶"),
-        PhotoArea(key: "bikini", title: "Bikini", emoji: "🌸"),
-        PhotoArea(key: "removal", title: "Removal", emoji: "🪞"),
-        PhotoArea(key: "habits", title: "Habits", emoji: "🍵"),
-    ]
+    /// Personal (pre-onboarding) installs keep the original extended areas;
+    /// fresh installs get a simple starter pair. Custom areas: future work.
+    static var all: [PhotoArea] {
+        if AppStore.isPersonalInstall {
+            return [
+                PhotoArea(key: "face", title: "Face", emoji: "🌷"),
+                PhotoArea(key: "chest", title: "Chest", emoji: "💗"),
+                PhotoArea(key: "armpits", title: "Armpits", emoji: "🫶"),
+                PhotoArea(key: "bikini", title: "Bikini", emoji: "🌸"),
+                PhotoArea(key: "removal", title: "Removal", emoji: "🪞"),
+                PhotoArea(key: "habits", title: "Habits", emoji: "🍵"),
+            ]
+        }
+        return [
+            PhotoArea(key: "face", title: "Face", emoji: "🌷"),
+            PhotoArea(key: "body", title: "Body", emoji: "🧴"),
+        ]
+    }
 }
 
 struct PhotosView: View {

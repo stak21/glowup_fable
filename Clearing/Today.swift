@@ -232,7 +232,7 @@ struct TodayView: View {
     private func dynamicFooter(for routine: Routine) -> String? {
         if let footer = routine.footer { return footer }
         if routine.steps.contains(where: \.everyOtherDay) && !store.azelaicBodyDay {
-            return "Azelaic acid rests today — it's back tomorrow ✨"
+            return "Every-other-day steps rest today — back tomorrow ✨"
         }
         return nil
     }
@@ -282,7 +282,7 @@ struct ProgressHeader: View {
                     .foregroundColor(.ink)
                 Text("\(dayName), \(dateLine)\(store.todayFocus.map { " · \($0)" } ?? "")")
                     .font(.footnote).foregroundColor(.soft)
-                Text("\(store.doneCount) of \(store.allKeys.count) done · Week 3 — you're doing amazingly 🌷")
+                Text("\(store.doneCount) of \(store.allKeys.count) done — you're doing amazingly 🌷")
                     .font(.caption2).foregroundColor(.faint)
             }
             Spacer()

@@ -77,17 +77,28 @@ final class AppStore: ObservableObject {
     }()
 
     init() {
+        // One-time flag: does this install predate the public onboarding?
+        // Personal (pre-onboarding) installs keep their seeded reminders and
+        // extended photo areas; fresh installs start clean.
+        if UserDefaults.standard.object(forKey: "personalInstall") == nil {
+            let legacyData = UserDefaults.standard.data(forKey: "routines") != nil
+                || UserDefaults.standard.data(forKey: "sectionOrder") != nil
+            UserDefaults.standard.set(legacyData, forKey: "personalInstall")
+        }
+
         profile = UserDefaults.standard.string(forKey: "activeProfile")
             .flatMap(RoutineProfile.init(rawValue:)) ?? .legacy
         loadChecks()
         if let data = UserDefaults.standard.data(forKey: "reminders"),
            let saved = try? JSONDecoder().decode([Reminder].self, from: data) {
             reminders = saved
-        } else {
+        } else if Self.isPersonalInstall {
             reminders = [
                 Reminder(label: "☀️ Morning ritual time", hour: 7, minute: 30, days: Set(1...7)),
                 Reminder(label: "🌙 Evening ritual time", hour: 21, minute: 30, days: Set(1...7)),
             ]
+        } else {
+            reminders = [] // new users add their own once they have a routine
         }
         if let data = UserDefaults.standard.data(forKey: "progressPhotos"),
            let saved = try? JSONDecoder().decode([ProgressPhoto].self, from: data) {
@@ -125,13 +136,25 @@ final class AppStore: ObservableObject {
         profile == .legacy ? "checks-\(dateKey)" : "checks-fresh-\(dateKey)"
     }
 
+    /// True on installs that predate the public onboarding (the developer's
+    /// device). Set once at launch in init.
+    static var isPersonalInstall: Bool {
+        UserDefaults.standard.bool(forKey: "personalInstall")
+    }
+
     /// The fresh profile starts truly empty — no seeds — to mirror a new install.
+    /// The legacy profile only migrates the original hard-coded program on
+    /// installs that actually ran it (identified by their saved section order);
+    /// brand-new installs start empty and onboard.
     private static func loadRoutines(for profile: RoutineProfile) -> [Routine] {
         if let data = UserDefaults.standard.data(forKey: routinesKey(for: profile)),
            let saved = try? JSONDecoder().decode([Routine].self, from: data) {
             return saved
         }
-        return profile == .legacy ? migratedSeedRoutines() : []
+        if profile == .legacy, UserDefaults.standard.data(forKey: "sectionOrder") != nil {
+            return migratedSeedRoutines()
+        }
+        return []
     }
 
     /// Swaps the active routine world. Running timers reset, same as when
