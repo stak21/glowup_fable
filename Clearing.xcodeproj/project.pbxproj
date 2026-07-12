@@ -256,8 +256,9 @@
 				DEVELOPMENT_TEAM = R4P2G66HZ6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Clearing uses your camera to take daily progress photos, stored privately on your device.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Clearing saves your exported timelapse videos to your Photos library.";
+				INFOPLIST_KEY_CFBundleDisplayName = GlowUp;
+				INFOPLIST_KEY_NSCameraUsageDescription = "GlowUp uses your camera to take daily progress photos, stored privately on your device.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "GlowUp saves your exported timelapse videos to your Photos library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -291,8 +292,9 @@
 				DEVELOPMENT_TEAM = R4P2G66HZ6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Clearing uses your camera to take daily progress photos, stored privately on your device.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Clearing saves your exported timelapse videos to your Photos library.";
+				INFOPLIST_KEY_CFBundleDisplayName = GlowUp;
+				INFOPLIST_KEY_NSCameraUsageDescription = "GlowUp uses your camera to take daily progress photos, stored privately on your device.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "GlowUp saves your exported timelapse videos to your Photos library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

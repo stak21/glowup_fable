@@ -132,7 +132,7 @@ struct TodayView: View {
         VStack(spacing: 10) {
             Text("🌸")
                 .font(.system(size: 44))
-            Text("Welcome to Clearing")
+            Text("Welcome to GlowUp")
                 .font(.system(.title2, design: .serif).weight(.semibold))
                 .foregroundColor(.ink)
             Text("Your skincare ritual, one gentle day at a time.\nEverything stays on your phone — no account, no tracking.")
