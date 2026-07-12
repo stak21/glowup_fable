@@ -40,6 +40,7 @@ enum NotificationManager {
     }
 
     static func sync(_ reminders: [Reminder]) {
+        if !reminders.isEmpty { requestPermission() }
         let center = UNUserNotificationCenter.current()
         center.getPendingNotificationRequests { existing in
             // Replace only reminder schedules — leave running step-timer notifications alone.
@@ -70,6 +71,7 @@ enum NotificationManager {
     // MARK: Step timers
 
     static func scheduleTimerDone(key: String, label: String, end: Date) {
+        requestPermission()
         let content = UNMutableNotificationContent()
         content.title = "⏳ \(label) — time's up!"
         content.body = "Ready for your next step ♡"

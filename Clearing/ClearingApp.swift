@@ -19,7 +19,8 @@ struct ClearingApp: App {
                 .preferredColorScheme(.light) // palette is hard-coded light; keeps system controls (drag handles etc.) visible
                 .onAppear {
                     UNUserNotificationCenter.current().delegate = NotifDelegate.shared
-                    NotificationManager.requestPermission()
+                    // Permission is requested contextually — first timer or
+                    // first reminder — not at launch.
                 }
         }
     }
