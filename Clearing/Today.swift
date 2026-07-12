@@ -262,6 +262,7 @@ struct SectionDropDelegate: DropDelegate {
 
 struct ProgressHeader: View {
     @EnvironmentObject var store: AppStore
+    @State private var showAbout = false
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
@@ -286,8 +287,15 @@ struct ProgressHeader: View {
                     .font(.caption2).foregroundColor(.faint)
             }
             Spacer()
+            Button { showAbout = true } label: {
+                Image(systemName: "info.circle")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.faint)
+            }
+            .accessibilityLabel("About GlowUp")
         }
         .padding(.top, 8)
+        .sheet(isPresented: $showAbout) { AboutSheet() }
     }
     private var dayName: String {
         store.selectedDate.formatted(.dateTime.weekday(.wide))

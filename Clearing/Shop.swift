@@ -87,6 +87,13 @@ struct ShopView: View {
                             }
                         }
                     }
+
+                    Text("As an Amazon Associate, GlowUp earns from qualifying purchases.")
+                        .font(.caption2)
+                        .foregroundColor(.faint)
+                        .frame(maxWidth: .infinity)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
                 }
                 .padding(.horizontal, 18)
                 .padding(.bottom, 24)
