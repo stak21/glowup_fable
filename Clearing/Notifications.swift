@@ -7,6 +7,9 @@ import UserNotifications
 extension Notification.Name {
     static let openTodayTab = Notification.Name("openTodayTab")
     static let openShopTab = Notification.Name("openShopTab")
+    /// Posted after "Build my routine" creates routines from a kit — sheets
+    /// listening for it dismiss themselves and RootView switches to Today.
+    static let kitRoutinesBuilt = Notification.Name("kitRoutinesBuilt")
 }
 
 final class NotifDelegate: NSObject, UNUserNotificationCenterDelegate {

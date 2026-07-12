@@ -189,6 +189,50 @@ final class AppStore: ObservableObject {
         }
     }
 
+    /// Onboarding's "build my routine": creates starter Morning/Evening routines
+    /// from a kit — cleanser and moisturizer in both, SPF mornings, the active
+    /// placed by type (exfoliants and retinoids go evenings, every other day;
+    /// other serums go mornings), each with its standard wait.
+    func buildRoutines(from kit: RoutineKit) {
+        var morning: [RStep] = []
+        var evening: [RStep] = []
+        func step(_ productID: String, _ category: StepCategory?, _ wait: Int?,
+                  everyOtherDay: Bool = false) -> RStep {
+            RStep(key: "st-" + UUID().uuidString.prefix(8).lowercased(),
+                  productID: productID, wait: wait, everyOtherDay: everyOtherDay, category: category)
+        }
+        for id in resolvedProductIDs(for: kit) {
+            guard let info = productInfo(id) else { continue }
+            let text = "\(info.name) \(info.tag)".lowercased()
+            let wait = DefaultWait.minutes(productText: text, category: info.category)
+            switch info.category {
+            case .cleanser, .moisturizer:
+                morning.append(step(id, info.category, wait))
+                evening.append(step(id, info.category, wait))
+            case .spf:
+                morning.append(step(id, .spf, wait))
+            case .exfoliant:
+                evening.append(step(id, .exfoliant, wait, everyOtherDay: true))
+            case .treatment where text.contains("retin") || text.contains("adapalene"):
+                evening.append(step(id, .treatment, wait, everyOtherDay: true))
+            case .treatment:
+                morning.append(step(id, .treatment, wait))
+            default:
+                evening.append(step(id, info.category, wait))
+            }
+        }
+        let rank: (RStep) -> Int = { $0.category?.sortRank ?? .max }
+        morning.sort { rank($0) < rank($1) }
+        evening.sort { rank($0) < rank($1) }
+        routines.append(Routine(id: "rt-" + UUID().uuidString.prefix(8).lowercased(),
+                                title: "Morning ritual", emoji: "☀️", subtitle: kit.title,
+                                days: Set(0...6), theme: .gold, steps: morning))
+        routines.append(Routine(id: "rt-" + UUID().uuidString.prefix(8).lowercased(),
+                                title: "Evening ritual", emoji: "🌙", subtitle: kit.title,
+                                days: Set(0...6), photoArea: "face", theme: .lavender, steps: evening))
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
     /// Adds every kit product not already on the wishlist; returns how many were added.
     @discardableResult
     func addKit(_ kit: RoutineKit) -> Int {

@@ -47,6 +47,9 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: .openTodayTab)) { _ in
             selectedTab = store.profile == .legacy ? .legacy : .today
         }
+        .onReceive(NotificationCenter.default.publisher(for: .kitRoutinesBuilt)) { _ in
+            selectedTab = store.profile == .legacy ? .legacy : .today
+        }
         .onReceive(NotificationCenter.default.publisher(for: .openShopTab)) { _ in
             selectedTab = .shop
         }
@@ -70,6 +73,7 @@ struct TodayView: View {
     @State private var draggedKey: String?
     @State private var showManager = false
     @State private var editingRoutine: Routine?
+    @State private var showOnboardingQuiz = false
     private let heartbeat = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -122,33 +126,51 @@ struct TodayView: View {
         .sheet(item: $editingRoutine) { RoutineEditorSheet(routine: $0, isNew: false) }
     }
 
+    /// First-run welcome — doubles as the onboarding entry: the quiz path
+    /// builds a starter routine; the manual path opens the editor.
     private var emptyState: some View {
         VStack(spacing: 10) {
             Text("🌸")
                 .font(.system(size: 44))
-            Text("No routines yet")
-                .font(.system(.title3, design: .serif).weight(.semibold))
+            Text("Welcome to Clearing")
+                .font(.system(.title2, design: .serif).weight(.semibold))
                 .foregroundColor(.ink)
-            Text("Build your first ritual with the pencil above,\nor find a starter kit in the Shop.")
+            Text("Your skincare ritual, one gentle day at a time.\nEverything stays on your phone — no account, no tracking.")
                 .font(.footnote)
                 .foregroundColor(.soft)
                 .multilineTextAlignment(.center)
             Button {
-                showManager = true
+                showOnboardingQuiz = true
             } label: {
-                Text("Create a routine")
-                    .font(.subheadline.weight(.semibold))
+                Text("Find my routine — 2-minute quiz ♡")
+                    .font(.subheadline.weight(.heavy))
                     .foregroundColor(.white)
                     .padding(.horizontal, 22)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 12)
                     .background(Capsule().fill(Color.rose))
             }
-            .padding(.top, 4)
+            .padding(.top, 6)
+            Button {
+                showManager = true
+            } label: {
+                Text("I'll build my own")
+                    .font(.subheadline.weight(.heavy))
+                    .foregroundColor(.roseDeep)
+            }
+            .padding(.top, 2)
+            Text("Cosmetic guidance only — not medical advice.")
+                .font(.caption2)
+                .foregroundColor(.faint)
+                .padding(.top, 6)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 36)
+        .padding(.horizontal, 16)
         .background(RoundedRectangle(cornerRadius: 22).fill(Color.white.opacity(0.85)))
         .padding(.top, 12)
+        .sheet(isPresented: $showOnboardingQuiz) {
+            QuizSheet(kits: BundledKitCatalog().allKits(), catalog: store.shopProducts)
+        }
     }
 
     private func sectionIconRow(proxy: ScrollViewProxy) -> some View {

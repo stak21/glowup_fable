@@ -57,6 +57,7 @@ struct KitCard: View {
 struct KitSheet: View {
     let kit: RoutineKit
     let catalog: [ShopProduct]
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {
@@ -71,6 +72,9 @@ struct KitSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .onReceive(NotificationCenter.default.publisher(for: .kitRoutinesBuilt)) { _ in
+            dismiss() // routines built — get out of the way so Today shows them
+        }
     }
 }
 
@@ -80,6 +84,7 @@ struct KitSheetContent: View {
     let catalog: [ShopProduct]
     @EnvironmentObject var store: AppStore
     @State private var infoProduct: ShopProduct?
+    @State private var builtRoutines = false
 
     private var products: [String: ShopProduct] {
         Dictionary(uniqueKeysWithValues: catalog.map { ($0.id, $0) })
@@ -145,14 +150,30 @@ struct KitSheetContent: View {
             .padding(.top, 2)
 
             Button {
-                store.addKit(kit)
+                store.buildRoutines(from: kit)
+                builtRoutines = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                    NotificationCenter.default.post(name: .kitRoutinesBuilt, object: nil)
+                }
             } label: {
-                Text(allAdded ? "All on your list ♥" : "Add all to list ♡")
+                Text(builtRoutines ? "Routines created — see Today ✓" : "Build my routine ♡")
                     .font(.subheadline.weight(.heavy))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 13)
-                    .background(Capsule().fill(allAdded ? Color.roseDeep : Color.rose))
+                    .background(Capsule().fill(builtRoutines ? Color.greenC : Color.rose))
+            }
+            .disabled(builtRoutines)
+
+            Button {
+                store.addKit(kit)
+            } label: {
+                Text(allAdded ? "All on your list ♥" : "Add all to shopping list ♡")
+                    .font(.subheadline.weight(.heavy))
+                    .foregroundColor(.roseDeep)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 13)
+                    .background(Capsule().stroke(Color.roseDeep, lineWidth: 1.5))
             }
             .disabled(allAdded)
         }

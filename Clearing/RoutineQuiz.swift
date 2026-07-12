@@ -67,6 +67,9 @@ struct QuizSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .onReceive(NotificationCenter.default.publisher(for: .kitRoutinesBuilt)) { _ in
+            dismiss() // routines built — get out of the way so Today shows them
+        }
     }
 
     // MARK: Steps
