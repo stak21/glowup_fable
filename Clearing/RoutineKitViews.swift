@@ -156,16 +156,20 @@ struct KitSheetContent: View {
 
             let built = store.hasKitRoutines(kit.id)
             Button {
-                reviewRequest = ReviewRequest(drafts: store.draftKitRoutines(from: kit))
+                if built {
+                    // Already built — this is a link to Today now, not a rebuild.
+                    NotificationCenter.default.post(name: .kitRoutinesBuilt, object: nil)
+                } else {
+                    reviewRequest = ReviewRequest(drafts: store.draftKitRoutines(from: kit))
+                }
             } label: {
-                Text(built ? "Routines created — see Today ✓" : "Build my routine ♡")
+                Text(built ? "Routines created — see Today →" : "Build my routine ♡")
                     .font(.subheadline.weight(.heavy))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 13)
                     .background(Capsule().fill(built ? Color.greenC : Color.rose))
             }
-            .disabled(built)
 
             Button {
                 store.addKit(kit)
@@ -180,7 +184,7 @@ struct KitSheetContent: View {
             .disabled(allAdded)
         }
         .sheet(item: $infoProduct) { ShopProductSheet(product: $0) }
-        .sheet(item: $reviewRequest) { KitReviewSheet(drafts: $0.drafts) }
+        .sheet(item: $reviewRequest) { KitReviewSheet(kit: kit, drafts: $0.drafts) }
     }
 
     private func kitRow(role: String, product: ShopProduct, swapped: Bool) -> some View {
@@ -220,11 +224,13 @@ struct KitSheetContent: View {
 /// Full-edit review of the two starter routines a kit drafts: rename them,
 /// reorder, remove or add steps — nothing is created until the button says so.
 struct KitReviewSheet: View {
+    let kit: RoutineKit
     @EnvironmentObject var store: AppStore
     @Environment(\.dismiss) private var dismiss
     @State private var drafts: [Routine]
 
-    init(drafts: [Routine]) {
+    init(kit: RoutineKit, drafts: [Routine]) {
+        self.kit = kit
         _drafts = State(initialValue: drafts)
     }
 
@@ -291,7 +297,7 @@ struct KitReviewSheet: View {
                     .disabled(!canCreate)
                     .padding(.top, 8)
 
-                    Text("Days, colors and photo check-ins can be changed anytime — tap the pencil on Today.")
+                    Text("Days, colors and photo check-ins can be changed anytime — tap the pencil on Today. These products also go on your shopping list.")
                         .font(.caption)
                         .foregroundColor(.faint)
                 }
@@ -305,6 +311,7 @@ struct KitReviewSheet: View {
 
     private func create() {
         store.createRoutines(drafts)
+        store.addKit(kit) // building a routine around these means you need to buy them — mark them on the list too
         NotificationCenter.default.post(name: .kitRoutinesBuilt, object: nil)
         dismiss()
     }
