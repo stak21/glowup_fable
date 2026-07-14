@@ -273,7 +273,7 @@ struct KitReviewSheet: View {
                                     .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
                                     .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.lineC, lineWidth: 1))
                             }
-                            StepListEditor(steps: $draft.steps)
+                            StepListEditor(steps: $draft.steps, omitCoreCategories: draft.omitCoreCategories)
                         }
                         .padding(.top, 6)
                     }

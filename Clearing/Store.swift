@@ -284,14 +284,25 @@ final class AppStore: ObservableObject {
         let rank: (RStep) -> Int = { $0.category?.sortRank ?? .max }
         morning.sort { rank($0) < rank($1) }
         evening.sort { rank($0) < rank($1) }
+        // SPF never belongs at night. A starter kit's one active lands in
+        // whichever routine suits it — the other routine shouldn't nudge for
+        // a duplicate; that's the "keep it simple" starter-kit philosophy,
+        // not a gap.
+        let treatmentInMorning = morning.contains { $0.category == .treatment }
+        let treatmentInEvening = evening.contains { $0.category == .treatment }
+        var morningOmit: Set<StepCategory> = []
+        var eveningOmit: Set<StepCategory> = [.spf]
+        if treatmentInMorning && !treatmentInEvening { eveningOmit.insert(.treatment) }
+        if treatmentInEvening && !treatmentInMorning { morningOmit.insert(.treatment) }
         return [
             Routine(id: "rt-" + UUID().uuidString.prefix(8).lowercased(),
                     title: "Morning ritual", emoji: "☀️", subtitle: kit.title,
-                    days: Set(0...6), theme: .gold, steps: morning, sourceKitID: kit.id),
+                    days: Set(0...6), theme: .gold, steps: morning, sourceKitID: kit.id,
+                    omitCoreCategories: morningOmit),
             Routine(id: "rt-" + UUID().uuidString.prefix(8).lowercased(),
                     title: "Evening ritual", emoji: "🌙", subtitle: kit.title,
                     days: Set(0...6), photoArea: "face", theme: .lavender, steps: evening,
-                    sourceKitID: kit.id),
+                    sourceKitID: kit.id, omitCoreCategories: eveningOmit),
         ]
     }
 

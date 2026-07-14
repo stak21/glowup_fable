@@ -277,7 +277,7 @@ struct RoutineEditorSheet: View {
                     }
 
                     caption("STEPS · IN ORDER")
-                    StepListEditor(steps: $draft.steps,
+                    StepListEditor(steps: $draft.steps, omitCoreCategories: draft.omitCoreCategories,
                                    onShopHandoff: { handOffToShop(category: $0) })
 
                     Button {
@@ -367,6 +367,9 @@ struct RoutineEditorSheet: View {
 struct StepListEditor: View {
     @EnvironmentObject var store: AppStore
     @Binding var steps: [RStep]
+    /// Core categories this routine deliberately skips — suppresses their
+    /// "add a ___" placeholder (e.g. SPF in a kit-built evening routine).
+    var omitCoreCategories: Set<StepCategory> = []
     /// "Find one in the Shop →" hand-off; nil hides the option (e.g. during
     /// onboarding review, where jumping tabs would abandon the flow).
     var onShopHandoff: ((StepCategory?) -> Void)? = nil
@@ -395,7 +398,7 @@ struct StepListEditor: View {
                         draggedKey: $draggedStepKey,
                         reorder: moveStep))
             }
-            ForEach(RoutinePlacement.missingCoreCategories(in: steps)) { category in
+            ForEach(RoutinePlacement.missingCoreCategories(in: steps, omit: omitCoreCategories)) { category in
                 placeholderSlot(category)
             }
             Button {

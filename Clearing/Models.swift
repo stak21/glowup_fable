@@ -69,9 +69,13 @@ enum RoutinePlacement {
     /// Core categories a routine is expected to cover — drives placeholder slots.
     static let coreCategories: [StepCategory] = [.cleanser, .treatment, .moisturizer, .spf]
 
-    static func missingCoreCategories(in steps: [RStep]) -> [StepCategory] {
-        let present = Set(steps.compactMap(\.category))
-        return coreCategories.filter { !present.contains($0) }
+    /// `omit` lets a routine mark categories it deliberately doesn't need — e.g. a
+    /// kit-built evening routine whose one active lives in the morning instead —
+    /// so the "add a ___" nudge doesn't read as something forgotten.
+    static func missingCoreCategories(in steps: [RStep], omit: Set<StepCategory> = []) -> [StepCategory] {
+        var present = Set(steps.compactMap(\.category))
+        if present.contains(.exfoliant) { present.insert(.treatment) } // an exfoliant already covers the active slot
+        return coreCategories.filter { !present.contains($0) && !omit.contains($0) }
     }
 }
 
@@ -123,6 +127,8 @@ struct Routine: Identifiable, Codable, Equatable {
     var theme: RoutineTheme = .rose
     var steps: [RStep]
     var sourceKitID: String? = nil  // kit this was built from, so kits know they're already built
+    /// Core categories this routine deliberately skips (see `RoutinePlacement.missingCoreCategories`).
+    var omitCoreCategories: Set<StepCategory> = []
 }
 
 struct Reminder: Identifiable, Codable, Equatable {
