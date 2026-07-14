@@ -516,10 +516,13 @@ struct StepListEditor: View {
 
     private func addStep(productID: String, category: StepCategory?) {
         let info = store.productInfo(productID)
+        let text = "\(info?.name ?? "") \(info?.tag ?? "")"
         let step = RStep(key: "st-" + UUID().uuidString.prefix(8).lowercased(),
                          productID: productID,
-                         wait: DefaultWait.minutes(productText: "\(info?.name ?? "") \(info?.tag ?? "")",
-                                                   category: category),
+                         wait: DefaultWait.minutes(productText: text, category: category),
+                         everyOtherDay: DefaultCadence.everyOtherDay(
+                             productText: text, category: category,
+                             strength: store.shopProduct(productID)?.strength),
                          category: category)
         steps.insert(step, at: RoutinePlacement.insertionIndex(for: category, in: steps))
     }

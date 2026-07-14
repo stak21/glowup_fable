@@ -263,6 +263,8 @@ final class AppStore: ObservableObject {
             guard let info = productInfo(id) else { continue }
             let text = "\(info.name) \(info.tag)".lowercased()
             let wait = DefaultWait.minutes(productText: text, category: info.category)
+            let restDays = DefaultCadence.everyOtherDay(productText: text, category: info.category,
+                                                        strength: shopProductsByID[id]?.strength)
             switch info.category {
             case .cleanser, .moisturizer:
                 morning.append(step(id, info.category, wait))
@@ -270,11 +272,11 @@ final class AppStore: ObservableObject {
             case .spf:
                 morning.append(step(id, .spf, wait))
             case .exfoliant:
-                evening.append(step(id, .exfoliant, wait, everyOtherDay: true))
+                evening.append(step(id, .exfoliant, wait, everyOtherDay: restDays))
             case .treatment where text.contains("retin") || text.contains("adapalene"):
-                evening.append(step(id, .treatment, wait, everyOtherDay: true))
+                evening.append(step(id, .treatment, wait, everyOtherDay: restDays))
             case .treatment:
-                morning.append(step(id, .treatment, wait))
+                morning.append(step(id, .treatment, wait, everyOtherDay: restDays))
             default:
                 evening.append(step(id, info.category, wait))
             }
@@ -389,10 +391,13 @@ final class AppStore: ObservableObject {
         guard let idx = routines.firstIndex(where: { $0.id == routineID }) else { return }
         let info = productInfo(productID)
         let category = info?.category
+        let text = "\(info?.name ?? "") \(info?.tag ?? "")"
         let step = RStep(key: "st-" + UUID().uuidString.prefix(8).lowercased(),
                          productID: productID,
-                         wait: DefaultWait.minutes(productText: "\(info?.name ?? "") \(info?.tag ?? "")",
-                                                   category: category),
+                         wait: DefaultWait.minutes(productText: text, category: category),
+                         everyOtherDay: DefaultCadence.everyOtherDay(
+                             productText: text, category: category,
+                             strength: shopProductsByID[productID]?.strength),
                          category: category)
         var steps = routines[idx].steps
         steps.insert(step, at: RoutinePlacement.insertionIndex(for: category, in: steps))

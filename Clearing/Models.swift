@@ -93,6 +93,23 @@ enum DefaultWait {
     }
 }
 
+enum DefaultCadence {
+    /// Strong actives default to "every other day" when added to a routine —
+    /// retinoids and exfoliants always, other treatments when classified
+    /// strong. Same rule everywhere a product becomes a step (kit builder,
+    /// editor picker, Shop add); overridable per step in the step editor.
+    static func everyOtherDay(productText: String, category: StepCategory?,
+                              strength: ProductStrength?) -> Bool {
+        let text = productText.lowercased()
+        if text.contains("retin") || text.contains("adapalene") { return true }
+        switch category {
+        case .exfoliant: return true
+        case .treatment: return strength == .strong
+        default: return false
+        }
+    }
+}
+
 struct Routine: Identifiable, Codable, Equatable {
     var id: String                  // migrated: "morning", "evening-mon"…; new: UUID string
     var title: String
