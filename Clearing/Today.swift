@@ -124,6 +124,12 @@ struct TodayView: View {
         .sheet(item: $infoProduct) { ProductSheet(selection: $0) }
         .sheet(isPresented: $showManager) { RoutineManagerSheet() }
         .sheet(item: $editingRoutine) { RoutineEditorSheet(routine: $0, isNew: false) }
+        // Anchored here, not on the welcome card: the card leaves the hierarchy
+        // the moment routines exist, which would tear the quiz down mid-flow
+        // (and strand the flag true, making the quiz auto-present next time).
+        .sheet(isPresented: $showOnboardingQuiz) {
+            QuizSheet(kits: BundledKitCatalog().allKits(), catalog: store.shopProducts)
+        }
     }
 
     /// First-run welcome — doubles as the onboarding entry: the quiz path
@@ -168,9 +174,6 @@ struct TodayView: View {
         .padding(.horizontal, 16)
         .background(RoundedRectangle(cornerRadius: 22).fill(Color.white.opacity(0.85)))
         .padding(.top, 12)
-        .sheet(isPresented: $showOnboardingQuiz) {
-            QuizSheet(kits: BundledKitCatalog().allKits(), catalog: store.shopProducts)
-        }
     }
 
     private func sectionIconRow(proxy: ScrollViewProxy) -> some View {

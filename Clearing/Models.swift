@@ -105,6 +105,7 @@ struct Routine: Identifiable, Codable, Equatable {
     var photoArea: String? = nil    // existing PhotoAreas key, or nil for no photo prompt
     var theme: RoutineTheme = .rose
     var steps: [RStep]
+    var sourceKitID: String? = nil  // kit this was built from, so kits know they're already built
 }
 
 struct Reminder: Identifiable, Codable, Equatable {

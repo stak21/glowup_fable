@@ -84,7 +84,12 @@ struct KitSheetContent: View {
     let catalog: [ShopProduct]
     @EnvironmentObject var store: AppStore
     @State private var infoProduct: ShopProduct?
-    @State private var builtRoutines = false
+    /// Drafts under review ride along with the sheet so a stale pair can't linger.
+    private struct ReviewRequest: Identifiable {
+        let drafts: [Routine]
+        var id: String { drafts.map(\.id).joined() }
+    }
+    @State private var reviewRequest: ReviewRequest?
 
     private var products: [String: ShopProduct] {
         Dictionary(uniqueKeysWithValues: catalog.map { ($0.id, $0) })
@@ -149,21 +154,18 @@ struct KitSheetContent: View {
             }
             .padding(.top, 2)
 
+            let built = store.hasKitRoutines(kit.id)
             Button {
-                store.buildRoutines(from: kit)
-                builtRoutines = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
-                    NotificationCenter.default.post(name: .kitRoutinesBuilt, object: nil)
-                }
+                reviewRequest = ReviewRequest(drafts: store.draftKitRoutines(from: kit))
             } label: {
-                Text(builtRoutines ? "Routines created — see Today ✓" : "Build my routine ♡")
+                Text(built ? "Routines created — see Today ✓" : "Build my routine ♡")
                     .font(.subheadline.weight(.heavy))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 13)
-                    .background(Capsule().fill(builtRoutines ? Color.greenC : Color.rose))
+                    .background(Capsule().fill(built ? Color.greenC : Color.rose))
             }
-            .disabled(builtRoutines)
+            .disabled(built)
 
             Button {
                 store.addKit(kit)
@@ -178,6 +180,7 @@ struct KitSheetContent: View {
             .disabled(allAdded)
         }
         .sheet(item: $infoProduct) { ShopProductSheet(product: $0) }
+        .sheet(item: $reviewRequest) { KitReviewSheet(drafts: $0.drafts) }
     }
 
     private func kitRow(role: String, product: ShopProduct, swapped: Bool) -> some View {
@@ -209,5 +212,100 @@ struct KitSheetContent: View {
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.lineC, lineWidth: 1))
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Kit review ("build my routine" confirmation)
+
+/// Full-edit review of the two starter routines a kit drafts: rename them,
+/// reorder, remove or add steps — nothing is created until the button says so.
+struct KitReviewSheet: View {
+    @EnvironmentObject var store: AppStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var drafts: [Routine]
+
+    init(drafts: [Routine]) {
+        _drafts = State(initialValue: drafts)
+    }
+
+    private var canCreate: Bool {
+        drafts.allSatisfy { !$0.title.trimmingCharacters(in: .whitespaces).isEmpty }
+    }
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [.bgTop, .bgBottom], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Text("Review your rituals")
+                            .font(.system(.title2, design: .serif).weight(.semibold))
+                            .foregroundColor(.ink)
+                        Spacer()
+                        Button { dismiss() } label: {
+                            Image(systemName: "xmark")
+                                .font(.caption.weight(.heavy))
+                                .foregroundColor(.roseDeep)
+                                .frame(width: 30, height: 30)
+                                .background(Circle().fill(Color.roseTint))
+                        }
+                    }
+                    .padding(.top, 20)
+
+                    Text("Rename anything, drag to reorder, tap a step to tweak. Nothing is saved until you create them.")
+                        .font(.subheadline)
+                        .foregroundColor(.soft)
+
+                    ForEach($drafts) { $draft in
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack(spacing: 10) {
+                                Text(draft.emoji)
+                                    .font(.title3)
+                                    .frame(width: 38, height: 38)
+                                    .background(RoundedRectangle(cornerRadius: 12).fill(draft.theme.tint))
+                                TextField("Routine name", text: $draft.title)
+                                    .font(.system(.headline, design: .serif).weight(.semibold))
+                                    .foregroundColor(.ink)
+                                    .submitLabel(.done)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 10)
+                                    .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
+                                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.lineC, lineWidth: 1))
+                            }
+                            StepListEditor(steps: $draft.steps)
+                        }
+                        .padding(.top, 6)
+                    }
+
+                    Button {
+                        create()
+                    } label: {
+                        Text("Create my rituals ♡")
+                            .font(.subheadline.weight(.heavy))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .background(Capsule().fill(canCreate ? Color.rose : Color.faint))
+                    }
+                    .disabled(!canCreate)
+                    .padding(.top, 8)
+
+                    Text("Days, colors and photo check-ins can be changed anytime — tap the pencil on Today.")
+                        .font(.caption)
+                        .foregroundColor(.faint)
+                }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 24)
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
+
+    private func create() {
+        store.createRoutines(drafts)
+        NotificationCenter.default.post(name: .kitRoutinesBuilt, object: nil)
+        dismiss()
     }
 }

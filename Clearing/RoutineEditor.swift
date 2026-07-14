@@ -158,16 +158,7 @@ struct RoutineEditorSheet: View {
     @State private var draft: Routine
     let isNew: Bool
 
-    @State private var editingStepKey: String?
-    /// Item-driven picker presentation: the tapped slot's category rides along with
-    /// the sheet, so the filter can't lag a tap (as isPresented + separate state did).
-    private struct PickerRequest: Identifiable {
-        let category: StepCategory?
-        var id: String { category?.rawValue ?? "any" }
-    }
-    @State private var pickerRequest: PickerRequest?
     @State private var confirmDelete = false
-    @State private var draggedStepKey: String?
     @FocusState private var titleFocused: Bool
 
     private let displayDayOrder = [1, 2, 3, 4, 5, 6, 0]
@@ -286,37 +277,8 @@ struct RoutineEditorSheet: View {
                     }
 
                     caption("STEPS · IN ORDER")
-                    VStack(spacing: 8) {
-                        ForEach(Array(draft.steps.enumerated()), id: \.element.key) { index, step in
-                            stepRow(step, num: index + 1)
-                                .opacity(draggedStepKey == step.key ? 0.4 : 1)
-                                .onDrag {
-                                    draggedStepKey = step.key
-                                    return NSItemProvider(object: step.key as NSString)
-                                }
-                                .onDrop(of: [.text], delegate: SectionDropDelegate(
-                                    item: step.key,
-                                    draggedKey: $draggedStepKey,
-                                    reorder: moveStep))
-                        }
-                        ForEach(RoutinePlacement.missingCoreCategories(in: draft.steps)) { category in
-                            placeholderSlot(category)
-                        }
-                        Button {
-                            pickerRequest = PickerRequest(category: nil)
-                        } label: {
-                            Label("Add a product", systemImage: "plus")
-                                .font(.footnote.weight(.heavy))
-                                .foregroundColor(.roseDeep)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 11)
-                                .background(Capsule().fill(Color.roseTint))
-                        }
-                    }
-                    .onDrop(of: [.text], isTargeted: nil) { _ in
-                        draggedStepKey = nil
-                        return true
-                    }
+                    StepListEditor(steps: $draft.steps,
+                                   onShopHandoff: { handOffToShop(category: $0) })
 
                     Button {
                         save()
@@ -349,27 +311,8 @@ struct RoutineEditorSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
-        .sheet(item: $pickerRequest) { request in
-            ProductPickerSheet(initialCategory: request.category,
-                               onPick: { productID, category in
-                                   addStep(productID: productID, category: category)
-                               },
-                               onShopHandoff: { category in
-                                   handOffToShop(category: category)
-                               })
-        }
         .onChange(of: store.shopAddTarget) { _, target in
             if target != nil { dismiss() }
-        }
-        .sheet(item: .init(
-            get: { editingStepKey.flatMap { key in draft.steps.first { $0.key == key } } },
-            set: { if $0 == nil { editingStepKey = nil } }
-        )) { step in
-            StepEditSheet(step: step) { updated in
-                if let idx = draft.steps.firstIndex(where: { $0.key == updated.key }) {
-                    draft.steps[idx] = updated
-                }
-            }
         }
         .confirmationDialog("Delete this routine?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
@@ -385,6 +328,108 @@ struct RoutineEditorSheet: View {
         Text(text)
             .font(.caption2.weight(.heavy))
             .foregroundColor(.soft)
+    }
+
+    private func save() {
+        if isNew {
+            store.addRoutine(draft)
+        } else {
+            store.updateRoutine(draft)
+        }
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        dismiss()
+    }
+
+    /// "Find one in the Shop →": silently save the draft so the Shop can add into
+    /// a real routine, arm the hand-off target, and jump tabs. Sheets dismiss via
+    /// their shopAddTarget onChange observers.
+    private func handOffToShop(category: StepCategory?) {
+        var toSave = draft
+        if toSave.title.trimmingCharacters(in: .whitespaces).isEmpty { toSave.title = "My routine" }
+        if toSave.days.isEmpty { toSave.days = Set(0...6) }
+        draft = toSave
+        if store.routines.contains(where: { $0.id == toSave.id }) {
+            store.updateRoutine(toSave)
+        } else {
+            store.addRoutine(toSave)
+        }
+        store.shopAddTarget = ShopAddTarget(routineID: toSave.id, routineTitle: toSave.title, category: category)
+        NotificationCenter.default.post(name: .openShopTab, object: nil)
+    }
+}
+
+// MARK: - Step list editor
+
+/// Reusable steps editor: numbered rows (tap to tweak wait/note/cadence),
+/// drag to reorder, x to delete, dashed placeholder slots for missing core
+/// categories, and an add-product picker. Edits land in the bound array —
+/// the owner decides when (or whether) they're saved.
+struct StepListEditor: View {
+    @EnvironmentObject var store: AppStore
+    @Binding var steps: [RStep]
+    /// "Find one in the Shop →" hand-off; nil hides the option (e.g. during
+    /// onboarding review, where jumping tabs would abandon the flow).
+    var onShopHandoff: ((StepCategory?) -> Void)? = nil
+
+    @State private var editingStepKey: String?
+    @State private var draggedStepKey: String?
+    /// Item-driven picker presentation: the tapped slot's category rides along with
+    /// the sheet, so the filter can't lag a tap (as isPresented + separate state did).
+    private struct PickerRequest: Identifiable {
+        let category: StepCategory?
+        var id: String { category?.rawValue ?? "any" }
+    }
+    @State private var pickerRequest: PickerRequest?
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ForEach(Array(steps.enumerated()), id: \.element.key) { index, step in
+                stepRow(step, num: index + 1)
+                    .opacity(draggedStepKey == step.key ? 0.4 : 1)
+                    .onDrag {
+                        draggedStepKey = step.key
+                        return NSItemProvider(object: step.key as NSString)
+                    }
+                    .onDrop(of: [.text], delegate: SectionDropDelegate(
+                        item: step.key,
+                        draggedKey: $draggedStepKey,
+                        reorder: moveStep))
+            }
+            ForEach(RoutinePlacement.missingCoreCategories(in: steps)) { category in
+                placeholderSlot(category)
+            }
+            Button {
+                pickerRequest = PickerRequest(category: nil)
+            } label: {
+                Label("Add a product", systemImage: "plus")
+                    .font(.footnote.weight(.heavy))
+                    .foregroundColor(.roseDeep)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 11)
+                    .background(Capsule().fill(Color.roseTint))
+            }
+        }
+        .onDrop(of: [.text], isTargeted: nil) { _ in
+            draggedStepKey = nil
+            return true
+        }
+        .sheet(item: $pickerRequest) { request in
+            ProductPickerSheet(initialCategory: request.category,
+                               onPick: { productID, category in
+                                   addStep(productID: productID, category: category)
+                               },
+                               onShopHandoff: onShopHandoff)
+        }
+        .sheet(item: .init(
+            get: { editingStepKey.flatMap { key in steps.first { $0.key == key } } },
+            set: { if $0 == nil { editingStepKey = nil } }
+        )) { step in
+            StepEditSheet(step: step) { updated in
+                if let idx = steps.firstIndex(where: { $0.key == updated.key }) {
+                    steps[idx] = updated
+                }
+            }
+        }
     }
 
     private func stepRow(_ step: RStep, num: Int) -> some View {
@@ -422,7 +467,7 @@ struct RoutineEditorSheet: View {
                     .font(.caption2.weight(.semibold))
                     .foregroundColor(.faint)
                 Button {
-                    draft.steps.removeAll { $0.key == step.key }
+                    steps.removeAll { $0.key == step.key }
                 } label: {
                     Image(systemName: "xmark")
                         .font(.caption.weight(.bold))
@@ -462,10 +507,10 @@ struct RoutineEditorSheet: View {
     }
 
     private func moveStep(_ draggedKey: String, over targetKey: String) {
-        guard let from = draft.steps.firstIndex(where: { $0.key == draggedKey }),
-              let to = draft.steps.firstIndex(where: { $0.key == targetKey }), from != to else { return }
+        guard let from = steps.firstIndex(where: { $0.key == draggedKey }),
+              let to = steps.firstIndex(where: { $0.key == targetKey }), from != to else { return }
         withAnimation(.easeInOut(duration: 0.2)) {
-            draft.steps.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
+            steps.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
         }
     }
 
@@ -476,34 +521,7 @@ struct RoutineEditorSheet: View {
                          wait: DefaultWait.minutes(productText: "\(info?.name ?? "") \(info?.tag ?? "")",
                                                    category: category),
                          category: category)
-        draft.steps.insert(step, at: RoutinePlacement.insertionIndex(for: category, in: draft.steps))
-    }
-
-    private func save() {
-        if isNew {
-            store.addRoutine(draft)
-        } else {
-            store.updateRoutine(draft)
-        }
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
-        dismiss()
-    }
-
-    /// "Find one in the Shop →": silently save the draft so the Shop can add into
-    /// a real routine, arm the hand-off target, and jump tabs. Sheets dismiss via
-    /// their shopAddTarget onChange observers.
-    private func handOffToShop(category: StepCategory?) {
-        var toSave = draft
-        if toSave.title.trimmingCharacters(in: .whitespaces).isEmpty { toSave.title = "My routine" }
-        if toSave.days.isEmpty { toSave.days = Set(0...6) }
-        draft = toSave
-        if store.routines.contains(where: { $0.id == toSave.id }) {
-            store.updateRoutine(toSave)
-        } else {
-            store.addRoutine(toSave)
-        }
-        store.shopAddTarget = ShopAddTarget(routineID: toSave.id, routineTitle: toSave.title, category: category)
-        NotificationCenter.default.post(name: .openShopTab, object: nil)
+        steps.insert(step, at: RoutinePlacement.insertionIndex(for: category, in: steps))
     }
 }
 

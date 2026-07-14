@@ -246,11 +246,12 @@ final class AppStore: ObservableObject {
         return score
     }
 
-    /// Onboarding's "build my routine": creates starter Morning/Evening routines
+    /// Onboarding's "build my routine": drafts starter Morning/Evening routines
     /// from a kit — cleanser and moisturizer in both, SPF mornings, the active
     /// placed by type (exfoliants and retinoids go evenings, every other day;
-    /// other serums go mornings), each with its standard wait.
-    func buildRoutines(from kit: RoutineKit) {
+    /// other serums go mornings), each with its standard wait. Nothing is saved
+    /// here — the drafts go to the review screen, and only "create" appends them.
+    func draftKitRoutines(from kit: RoutineKit) -> [Routine] {
         var morning: [RStep] = []
         var evening: [RStep] = []
         func step(_ productID: String, _ category: StepCategory?, _ wait: Int?,
@@ -281,13 +282,30 @@ final class AppStore: ObservableObject {
         let rank: (RStep) -> Int = { $0.category?.sortRank ?? .max }
         morning.sort { rank($0) < rank($1) }
         evening.sort { rank($0) < rank($1) }
-        routines.append(Routine(id: "rt-" + UUID().uuidString.prefix(8).lowercased(),
-                                title: "Morning ritual", emoji: "☀️", subtitle: kit.title,
-                                days: Set(0...6), theme: .gold, steps: morning))
-        routines.append(Routine(id: "rt-" + UUID().uuidString.prefix(8).lowercased(),
-                                title: "Evening ritual", emoji: "🌙", subtitle: kit.title,
-                                days: Set(0...6), photoArea: "face", theme: .lavender, steps: evening))
+        return [
+            Routine(id: "rt-" + UUID().uuidString.prefix(8).lowercased(),
+                    title: "Morning ritual", emoji: "☀️", subtitle: kit.title,
+                    days: Set(0...6), theme: .gold, steps: morning, sourceKitID: kit.id),
+            Routine(id: "rt-" + UUID().uuidString.prefix(8).lowercased(),
+                    title: "Evening ritual", emoji: "🌙", subtitle: kit.title,
+                    days: Set(0...6), photoArea: "face", theme: .lavender, steps: evening,
+                    sourceKitID: kit.id),
+        ]
+    }
+
+    /// Appends reviewed routines, skipping any whose ID already exists — a
+    /// double-fired create is a no-op instead of a duplicate pair.
+    func createRoutines(_ new: [Routine]) {
+        let fresh = new.filter { candidate in !routines.contains { $0.id == candidate.id } }
+        guard !fresh.isEmpty else { return }
+        routines.append(contentsOf: fresh)
         UINotificationFeedbackGenerator().notificationOccurred(.success)
+    }
+
+    /// True once routines built from this kit exist — the kit sheet shows
+    /// "created" instead of offering to build again.
+    func hasKitRoutines(_ kitID: String) -> Bool {
+        routines.contains { $0.sourceKitID == kitID }
     }
 
     /// Adds every kit product not already on the wishlist; returns how many were added.
