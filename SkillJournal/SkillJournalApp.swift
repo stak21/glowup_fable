@@ -1,26 +1,34 @@
 //  SkillJournalApp.swift
 //  Skill Journal — modular routine builder.
 //
-//  Step-1 scaffold: placeholder root view. The engine (AppStore, PackStore,
-//  RootView) arrives in the next steps; this file then mirrors ClearingApp's
-//  store injection + notification-delegate wiring.
+//  iOS 17+. Local notifications work with a FREE Apple ID (no paid account).
 
 import SwiftUI
+import UserNotifications
+
+// MARK: - App entry
 
 @main
 struct SkillJournalApp: App {
+    @StateObject private var store = AppStore()
     var body: some Scene {
         WindowGroup {
-            VStack(spacing: 12) {
-                Text("📓")
-                    .font(.system(size: 56))
-                Text("Skill Journal")
-                    .font(.system(.title, design: .serif).weight(.semibold))
-                Text("Scaffold build — engine transplant in progress.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+            // Placeholder root — replaced by RootView in the views transplant.
+            TabView {
+                PhotosView()
+                    .tabItem { Label("Photos", systemImage: "camera.fill") }
+                RemindersView()
+                    .tabItem { Label("Reminders", systemImage: "bell.fill") }
             }
-            .preferredColorScheme(.light)
+            .tint(.roseDeep)
+            .environmentObject(store)
+            .environmentObject(store.packs)
+            .preferredColorScheme(.light) // palette is hard-coded light; keeps system controls visible
+            .onAppear {
+                UNUserNotificationCenter.current().delegate = NotifDelegate.shared
+                // Permission is requested contextually — first timer or
+                // first reminder — not at launch.
+            }
         }
     }
 }

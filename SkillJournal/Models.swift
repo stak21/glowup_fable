@@ -298,6 +298,23 @@ struct WishlistItem: Identifiable, Codable, Equatable {
     var purchased = false     // checkable while shopping
 }
 
+enum DateKeyFormat {
+    static let key: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+    static let display: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d"
+        return f
+    }()
+    static func displayString(from dateKey: String) -> String {
+        guard let d = key.date(from: dateKey) else { return dateKey }
+        return display.string(from: d)
+    }
+}
+
 /// Display-only info for a step's "why" sheet, derived from a PackProduct.
 struct ProductInfo {
     let name: String
