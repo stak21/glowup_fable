@@ -204,12 +204,46 @@ final class AppStore: ObservableObject {
         wishlist[idx].purchased.toggle()
     }
 
-    /// Resolved product IDs for a kit, honoring sensitive-skin swaps.
+    /// Resolved product IDs for a kit, matched to the quiz's skin type.
+    /// Hand-curated sensitive swaps (`sensitiveAlt`) stay authoritative where
+    /// one exists; everything else — including sensitive items without a
+    /// curated swap, and oily/dry/combination, which previously got no
+    /// substitution at all — falls back to attribute-based matching against
+    /// `ShopProduct.skinTypes`. No quiz result, or "not sure": kit defaults
+    /// as authored, unchanged.
     func resolvedProductIDs(for kit: RoutineKit) -> [String] {
-        let sensitive = quizResult?.skinType == .sensitive
-        return kit.items.map { item in
-            sensitive ? (item.sensitiveAlt ?? item.productID) : item.productID
+        guard let skinType = quizResult?.skinType, skinType != .unsure else {
+            return kit.items.map(\.productID)
         }
+        return kit.items.map { resolvedProductID(for: $0, skinType: skinType) }
+    }
+
+    private func resolvedProductID(for item: KitItem, skinType: SkinType) -> String {
+        if skinType == .sensitive, let alt = item.sensitiveAlt {
+            return alt
+        }
+        guard let original = shopProductsByID[item.productID], !original.suits(skinType) else {
+            return item.productID
+        }
+        // Default doesn't fit this skin type — look for the closest same-category
+        // product that does, preferring one that shares the original's effects
+        // (a proxy for "still serves this kit role") and its strength band.
+        let best = shopProducts
+            .filter { $0.id != item.productID && $0.category == original.category && $0.suits(skinType) }
+            .sorted { lhs, rhs in
+                let ls = fitScore(lhs, matching: original)
+                let rs = fitScore(rhs, matching: original)
+                return ls != rs ? ls > rs : lhs.name < rhs.name
+            }
+            .first
+        return best?.id ?? item.productID // no fit found anywhere — surface the honest mismatch rather than hide it
+    }
+
+    private func fitScore(_ candidate: ShopProduct, matching original: ShopProduct) -> Int {
+        var score = 0
+        if !Set(candidate.effects).isDisjoint(with: original.effects) { score += 2 }
+        if candidate.strength == original.strength { score += 1 }
+        return score
     }
 
     /// Onboarding's "build my routine": creates starter Morning/Evening routines

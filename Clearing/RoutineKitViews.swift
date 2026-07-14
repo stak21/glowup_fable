@@ -89,9 +89,9 @@ struct KitSheetContent: View {
     private var products: [String: ShopProduct] {
         Dictionary(uniqueKeysWithValues: catalog.map { ($0.id, $0) })
     }
-    private var sensitive: Bool { store.quizResult?.skinType == .sensitive }
     private var resolvedIDs: [String] { store.resolvedProductIDs(for: kit) }
     private var allAdded: Bool { resolvedIDs.allSatisfy { store.isWishlisted($0) } }
+    private var anySwapped: Bool { zip(kit.items, resolvedIDs).contains { $0.productID != $1 } }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -113,8 +113,8 @@ struct KitSheetContent: View {
                     .foregroundColor(.soft)
             }
 
-            if sensitive && kit.items.contains(where: { $0.sensitiveAlt != nil }) {
-                Text("🌷 Swapped in gentler picks for your sensitive skin.")
+            if anySwapped, let mine = store.quizResult?.skinType {
+                Text("🌷 Swapped in picks matched to your \(mine.displayName.localizedLowercase) skin.")
                     .font(.footnote.weight(.semibold))
                     .foregroundColor(.roseDeep)
                     .padding(12)
@@ -192,7 +192,7 @@ struct KitSheetContent: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundColor(.ink)
                         .multilineTextAlignment(.leading)
-                    Text("\(product.brand) · \(product.price)\(swapped ? " · gentler pick 🌷" : "")")
+                    Text("\(product.brand) · \(product.price)\(swapped ? " · matched to you 🌷" : "")")
                         .font(.caption)
                         .foregroundColor(.soft)
                 }
