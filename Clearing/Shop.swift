@@ -9,6 +9,7 @@ struct ShopView: View {
     @EnvironmentObject var store: AppStore
     @State private var query = ""
     @State private var activeEffects: Set<Effect> = []
+    @State private var forMySkin = false
     @State private var infoProduct: ShopProduct?
     @State private var showWishlist = false
     @State private var showQuiz = false
@@ -30,6 +31,9 @@ struct ShopView: View {
         }
         if !activeEffects.isEmpty {
             items = items.filter { !activeEffects.isDisjoint(with: $0.effects) }
+        }
+        if forMySkin, let mine = store.quizResult?.skinType {
+            items = items.filter { $0.suits(mine) }
         }
         let q = query.trimmingCharacters(in: .whitespaces)
         if !q.isEmpty {
@@ -244,6 +248,20 @@ struct ShopView: View {
     private var effectChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
+                // Personal fit filter — only offered once the quiz knows the skin type.
+                if let mine = store.quizResult?.skinType, mine != .unsure {
+                    Button {
+                        forMySkin.toggle()
+                    } label: {
+                        Text("\(mine.emoji) My \(mine.displayName.localizedLowercase) skin")
+                            .font(.footnote.weight(.heavy))
+                            .foregroundColor(forMySkin ? .white : .roseDeep)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(Capsule().fill(forMySkin ? Color.roseDeep : Color.white))
+                            .overlay(Capsule().stroke(Color.roseDeep, lineWidth: 1.5))
+                    }
+                }
                 ForEach(Effect.allCases) { effect in
                     let active = activeEffects.contains(effect)
                     Button {
@@ -355,6 +373,7 @@ struct ShopProductSheet: View {
                             .background(Capsule().fill(Color.roseTint))
                     }
                 }
+                skinFitRow
                 infoBlock("What it is", product.what)
                 infoBlock("Why it helps", product.why)
                 infoBlock("Where it fits", product.order)
@@ -422,6 +441,34 @@ struct ShopProductSheet: View {
                 .overlay(Rectangle().fill(Color.lineC).frame(height: 1), alignment: .top)
                 .ignoresSafeArea()
         )
+    }
+
+    /// Strength + skin-type fit, personalized against the quiz answer.
+    @ViewBuilder private var skinFitRow: some View {
+        if let skinTypes = product.skinTypes, let strength = product.strength {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 6) {
+                    Text("\(strength.emoji) \(strength.displayName)")
+                        .font(.caption2.weight(.heavy))
+                        .foregroundColor(strength == .strong ? .roseDeep : .soft)
+                    Text("·").foregroundColor(.faint)
+                    Text("For \(skinTypes.map(\.displayName.localizedLowercase).joined(separator: ", ")) skin")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundColor(.soft)
+                }
+                if let mine = store.quizResult?.skinType, mine != .unsure {
+                    if product.suits(mine) {
+                        Text("✓ Suits your \(mine.displayName.localizedLowercase) skin")
+                            .font(.caption2.weight(.heavy))
+                            .foregroundColor(.greenC)
+                    } else {
+                        Text("⚠︎ Not the best match for your \(mine.displayName.localizedLowercase) skin")
+                            .font(.caption2.weight(.heavy))
+                            .foregroundColor(.roseDeep)
+                    }
+                }
+            }
+        }
     }
 
     private func infoBlock(_ heading: String, _ text: String) -> some View {

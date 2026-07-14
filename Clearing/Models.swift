@@ -162,6 +162,27 @@ enum Effect: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// Irritancy potential — how much skin acclimation a product demands.
+/// For actives it tracks concentration/potency; for everything else it means
+/// "how safe is this on reactive skin".
+enum ProductStrength: String, Codable, CaseIterable {
+    case gentle, moderate, strong
+    var displayName: String {
+        switch self {
+        case .gentle: return "Gentle"
+        case .moderate: return "Moderate"
+        case .strong: return "Strong"
+        }
+    }
+    var emoji: String {
+        switch self {
+        case .gentle: return "🌿"
+        case .moderate: return "⚖️"
+        case .strong: return "🔥"
+        }
+    }
+}
+
 struct ShopProduct: Identifiable, Codable, Equatable {
     let id: String            // stable slug, e.g. "cosrx-snail-mucin"
     let name: String
@@ -175,6 +196,15 @@ struct ShopProduct: Identifiable, Codable, Equatable {
     let category: StepCategory
     let price: String         // freeform, e.g. "~$15"
     var storeURL: URL? = nil
+    var skinTypes: [SkinType]? = nil     // skin types this suits; nil = not yet classified
+    var strength: ProductStrength? = nil
+
+    /// True when the product is classified and suits the given type.
+    /// `.unsure` (and nil) match everything — no data, no exclusion.
+    func suits(_ type: SkinType?) -> Bool {
+        guard let type, type != .unsure, let skinTypes else { return true }
+        return skinTypes.contains(type)
+    }
 }
 
 /// Active "tap a product to add it" hand-off from the routine editor to the Shop tab.
