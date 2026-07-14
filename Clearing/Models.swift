@@ -270,6 +270,16 @@ enum SkinType: String, Codable, CaseIterable, Identifiable {
         case .unsure: return "🤔"
         }
     }
+    /// One-line recognition cue shown under the name in the quiz.
+    var cue: String {
+        switch self {
+        case .oily: return "Shiny all over by midday, pores easy to spot"
+        case .dry: return "Tight after washing, flaky or rough patches"
+        case .combination: return "Oily T-zone, normal-to-dry cheeks"
+        case .sensitive: return "New products often sting or leave redness"
+        case .unsure: return "We'll figure it out together"
+        }
+    }
 }
 
 struct KitItem: Codable, Equatable {

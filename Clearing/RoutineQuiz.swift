@@ -16,6 +16,11 @@ struct QuizSheet: View {
     @State private var concern: Effect?
     @State private var tier: RoutineTier?
 
+    // "Not sure" mini skin check
+    @State private var findingType = false
+    @State private var finderAnswers: [Int?] = [nil, nil, nil]
+    @State private var finderStep = 0
+
     private var recommendedKit: RoutineKit? {
         guard let concern, let tier else { return nil }
         return kits.first { $0.id == "\(concern.rawValue)-\(tier.rawValue)" }
@@ -29,9 +34,15 @@ struct QuizSheet: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
                         HStack {
-                            if step > 0 {
+                            if step > 0 || findingType {
                                 Button {
-                                    withAnimation { step -= 1 }
+                                    withAnimation {
+                                        if findingType {
+                                            if finderStep > 0 { finderStep -= 1 } else { findingType = false }
+                                        } else {
+                                            step -= 1
+                                        }
+                                    }
                                 } label: {
                                     Image(systemName: "chevron.left")
                                         .font(.subheadline.weight(.heavy))
@@ -39,14 +50,17 @@ struct QuizSheet: View {
                                 }
                             }
                             Spacer()
-                            Text("\(step + 1) of 3")
+                            Text(findingType
+                                 ? (finderStep < Self.finderQuestions.count ? "Skin check \(finderStep + 1) of 3" : "Skin check")
+                                 : "\(step + 1) of 3")
                                 .font(.caption.weight(.heavy))
                                 .foregroundColor(.faint)
                         }
                         .padding(.top, 20)
 
                         switch step {
-                        case 0: skinTypeStep
+                        case 0:
+                            if findingType { typeFinderStep } else { skinTypeStep }
                         case 1: concernStep
                         default: tierStep
                         }
@@ -78,11 +92,141 @@ struct QuizSheet: View {
         VStack(alignment: .leading, spacing: 12) {
             header("How does your skin feel most days?",
                    sub: "This helps us pick gentler options if you need them.")
-            ForEach(SkinType.allCases) { type in
-                optionCard(emoji: type.emoji, title: type.displayName, selected: skinType == type) {
+            ForEach([SkinType.oily, .dry, .combination, .sensitive]) { type in
+                optionCard(emoji: type.emoji, title: type.displayName, subtitle: type.cue,
+                           selected: skinType == type) {
                     skinType = type
                     advance()
                 }
+            }
+            Button {
+                finderAnswers = [nil, nil, nil]
+                finderStep = 0
+                withAnimation(.easeInOut(duration: 0.2)) { findingType = true }
+            } label: {
+                HStack(spacing: 12) {
+                    Text("🤔").font(.title3)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Not sure? Let's find out")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.ink)
+                        Text("Three quick questions, about 30 seconds")
+                            .font(.caption)
+                            .foregroundColor(.soft)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.bold))
+                        .foregroundColor(.faint)
+                }
+                .padding(16)
+                .background(RoundedRectangle(cornerRadius: 16).fill(Color.white))
+                .overlay(RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.rose.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [5, 4])))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: "Not sure" mini skin check
+
+    private struct FinderOption {
+        let emoji: String
+        let title: String
+        var vote: SkinType? = nil   // nil = neutral, no signal
+    }
+    private struct FinderQuestion {
+        let title: String
+        let sub: String
+        let options: [FinderOption]
+    }
+
+    private static let finderQuestions: [FinderQuestion] = [
+        FinderQuestion(
+            title: "An hour after washing your face — no products — it usually feels…",
+            sub: "This bare-faced hour is the classic at-home skin test.",
+            options: [
+                FinderOption(emoji: "😬", title: "Tight, uncomfortable, maybe flaky", vote: .dry),
+                FinderOption(emoji: "😊", title: "Comfortable — I barely notice it", vote: .combination),
+                FinderOption(emoji: "🌗", title: "Oily in spots — forehead, nose, chin", vote: .combination),
+                FinderOption(emoji: "✨", title: "Shiny or greasy all over", vote: .oily),
+            ]),
+        FinderQuestion(
+            title: "By late afternoon on a normal day, your face looks…",
+            sub: "End-of-day shine (or flaking) is where your type shows itself.",
+            options: [
+                FinderOption(emoji: "🏜️", title: "Dull, rough, or flaky in places", vote: .dry),
+                FinderOption(emoji: "🌗", title: "Shiny in the T-zone, fine elsewhere", vote: .combination),
+                FinderOption(emoji: "✨", title: "Shiny pretty much everywhere", vote: .oily),
+                FinderOption(emoji: "😌", title: "About the same as the morning"),
+            ]),
+        FinderQuestion(
+            title: "When you try new products, how does your skin react?",
+            sub: "Stinging, burning, or redness points to a delicate skin barrier.",
+            options: [
+                FinderOption(emoji: "🌷", title: "It often stings, burns, or turns red", vote: .sensitive),
+                FinderOption(emoji: "🤏", title: "The occasional tingle, nothing dramatic"),
+                FinderOption(emoji: "💪", title: "Rarely or never reacts"),
+            ]),
+    ]
+
+    /// Sensitive wins outright; otherwise unanimous votes decide, and any
+    /// split verdict lands on combination.
+    private var finderVerdict: SkinType {
+        let votes = zip(Self.finderQuestions, finderAnswers).compactMap { q, a in
+            a.flatMap { q.options[$0].vote }
+        }
+        if votes.contains(.sensitive) { return .sensitive }
+        guard let first = votes.first else { return .combination }
+        return votes.allSatisfy { $0 == first } ? first : .combination
+    }
+
+    private var typeFinderStep: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if finderStep < Self.finderQuestions.count {
+                let q = Self.finderQuestions[finderStep]
+                header(q.title, sub: q.sub)
+                ForEach(Array(q.options.enumerated()), id: \.offset) { i, option in
+                    optionCard(emoji: option.emoji, title: option.title,
+                               selected: finderAnswers[finderStep] == i) {
+                        finderAnswers[finderStep] = i
+                        withAnimation(.easeInOut(duration: 0.2)) { finderStep += 1 }
+                    }
+                }
+            } else {
+                let verdict = finderVerdict
+                header("Sounds like \(verdict.displayName.lowercased()) skin \(verdict.emoji)",
+                       sub: verdict.cue)
+                Button {
+                    skinType = verdict
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        findingType = false
+                        step += 1
+                    }
+                } label: {
+                    Text("That's me — use \(verdict.displayName.lowercased())")
+                        .font(.subheadline.weight(.heavy))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(Capsule().fill(Color.rose))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 8)
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) { findingType = false }
+                } label: {
+                    Text("I'd rather pick myself")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(.roseDeep)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 2)
+                Text("Skin shifts with seasons, stress, and hormones — you can retake the quiz anytime.")
+                    .font(.caption)
+                    .foregroundColor(.faint)
+                    .padding(.top, 10)
             }
         }
     }
