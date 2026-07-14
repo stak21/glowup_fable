@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "id": "petcare",
+  "name": "Pet Care",
+  "emoji": "🐾",
+  "tagline": "A settled routine is the kindest thing you can give a pet.",
+  "accentTheme": "coral",
+  "categories": [
+    {"id": "feeding", "name": "Feeding", "emoji": "🍖", "sortRank": 0},
+    {"id": "exercise", "name": "Exercise", "emoji": "🐕", "sortRank": 1},
+    {"id": "training", "name": "Training", "emoji": "🎾", "sortRank": 2},
+    {"id": "grooming", "name": "Grooming", "emoji": "🧼", "sortRank": 3},
+    {"id": "health", "name": "Health", "emoji": "💊", "sortRank": 4}
+  ],
+  "coreCategoryIDs": ["feeding", "exercise"],
+  "waitRules": [
+    {"categoryID": "feeding", "minutes": 30}
+  ],
+  "cadenceRules": [
+    {"categoryID": "grooming", "cadence": {"kind": "everyOtherDay"}},
+    {"keyword": "nail", "cadence": {"kind": "days", "days": [0]}},
+    {"keyword": "flea", "cadence": {"kind": "days", "days": [6]}}
+  ],
+  "templates": [
+    {
+      "id": "new-puppy",
+      "title": "New Puppy Starter",
+      "blurb": "Structure is how puppies learn the world is safe — mornings and evenings, every day.",
+      "routines": [
+        {
+          "title": "Puppy mornings",
+          "emoji": "☀️",
+          "theme": "gold",
+          "days": [0, 1, 2, 3, 4, 5, 6],
+          "photoAreaID": "pet",
+          "steps": [
+            {"label": "Potty break, first thing", "categoryID": "training", "note": "Same door, same spot — praise instantly"},
+            {"label": "Breakfast", "categoryID": "feeding", "waitMinutes": 30, "productID": "slow-feeder"},
+            {"label": "Short sniffy walk", "categoryID": "exercise"},
+            {"label": "Five-minute training game", "categoryID": "training", "note": "One cue per session — end on a win"}
+          ]
+        },
+        {
+          "title": "Puppy evenings",
+          "emoji": "🌙",
+          "theme": "lavender",
+          "days": [0, 1, 2, 3, 4, 5, 6],
+          "footer": "Puppies under 4 months: keep walks short and soft — their joints are still growing.",
+          "steps": [
+            {"label": "Dinner", "categoryID": "feeding", "waitMinutes": 30},
+            {"label": "Evening walk", "categoryID": "exercise"},
+            {"label": "Brush coat and check ears", "categoryID": "grooming", "cadence": {"kind": "everyOtherDay"}, "productID": "grooming-brush"},
+            {"label": "Settle-down cuddle in the crate", "categoryID": "training", "note": "Calm endings teach calm nights"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "adult-dog",
+      "title": "Happy Adult Dog",
+      "blurb": "One solid daily loop: fuel, real exercise, and upkeep that prevents vet visits.",
+      "routines": [
+        {
+          "title": "Daily dog care",
+          "emoji": "🐕",
+          "theme": "coral",
+          "days": [0, 1, 2, 3, 4, 5, 6],
+          "photoAreaID": "pet",
+          "steps": [
+            {"label": "Breakfast and fresh water", "categoryID": "feeding", "waitMinutes": 30},
+            {"label": "Long walk or run", "categoryID": "exercise", "note": "At least 30 minutes — sniffing counts as enrichment"},
+            {"label": "Brush the coat", "categoryID": "grooming", "cadence": {"kind": "everyOtherDay"}, "productID": "grooming-brush"},
+            {"label": "Nail check and trim", "categoryID": "grooming", "cadence": {"kind": "days", "days": [0]}, "note": "Clicking on the floor = too long"},
+            {"label": "Flea and tick check", "categoryID": "health", "cadence": {"kind": "days", "days": [6]}, "productID": "flea-treatment"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-basics",
+      "title": "Content Cat",
+      "blurb": "Cats thrive on predictability: same times, clean litter, real play.",
+      "routines": [
+        {
+          "title": "Cat care",
+          "emoji": "🐈",
+          "theme": "lavender",
+          "days": [0, 1, 2, 3, 4, 5, 6],
+          "photoAreaID": "pet",
+          "steps": [
+            {"label": "Fresh water and breakfast", "categoryID": "feeding"},
+            {"label": "Scoop the litter box", "categoryID": "health", "note": "Daily scooping catches health changes early"},
+            {"label": "Ten minutes of real play", "categoryID": "exercise", "note": "Wand toys beat laser dots — let them catch it"},
+            {"label": "Brush the coat", "categoryID": "grooming", "cadence": {"kind": "everyOtherDay"}}
+          ]
+        }
+      ]
+    }
+  ],
+  "quiz": {
+    "questions": [
+      {
+        "prompt": "Who is this routine for?",
+        "options": [
+          {"emoji": "🐶", "title": "A puppy", "subtitle": "Under a year old", "templateVotes": {"new-puppy": 2}},
+          {"emoji": "🐕", "title": "An adult dog", "templateVotes": {"adult-dog": 2}},
+          {"emoji": "🐈", "title": "A cat", "templateVotes": {"cat-basics": 2}}
+        ]
+      },
+      {
+        "prompt": "What's their energy like?",
+        "options": [
+          {"emoji": "🚀", "title": "Rocket fuel", "templateVotes": {"new-puppy": 1, "adult-dog": 1}},
+          {"emoji": "🙂", "title": "Playful but settles", "templateVotes": {"adult-dog": 1, "cat-basics": 1}},
+          {"emoji": "😴", "title": "Professional napper", "templateVotes": {"cat-basics": 1}}
+        ]
+      },
+      {
+        "prompt": "What matters most right now?",
+        "options": [
+          {"emoji": "🏠", "title": "House manners", "subtitle": "Potty training, settling", "templateVotes": {"new-puppy": 2}},
+          {"emoji": "💪", "title": "Fitness and condition", "templateVotes": {"adult-dog": 2}},
+          {"emoji": "😌", "title": "Calm and healthy", "templateVotes": {"cat-basics": 1, "adult-dog": 1}}
+        ]
+      }
+    ]
+  },
+  "educationPages": [
+    {"title": "Routine is love", "emoji": "🕰️", "body": "Pets can't read calendars — predictable meals, walks and bedtimes are how they know everything is okay. Most 'behavior problems' shrink when the day becomes predictable."},
+    {"title": "Feed, then rest", "emoji": "🍖", "body": "Give dogs a quiet half hour after meals before hard exercise — running on a full stomach raises the risk of bloat, which is a genuine emergency in larger breeds."},
+    {"title": "Grooming is a health check", "emoji": "🧼", "body": "Brushing isn't just about fur on the couch. Your hands find lumps, ticks, and sore spots months before they'd otherwise be noticed. Make it calm and short, and end with a treat."},
+    {"title": "Know your vet", "emoji": "🩺", "body": "This app tracks habits — it can't diagnose. Not eating for a day, drinking much more than usual, or sudden lethargy are vet calls, not things to routine your way through."}
+  ],
+  "photoAreas": [
+    {"id": "pet", "title": "Pet", "emoji": "🐾"}
+  ],
+  "products": [
+    {"id": "slow-feeder", "name": "Slow-feeder bowl", "tag": "Feeding", "what": "A bowl with ridges that makes your pet work for each mouthful.", "why": "Slows down gulpers — better digestion, lower bloat risk, and breakfast doubles as a puzzle.", "order": "Use for every meal if your pet inhales food.", "categoryID": "feeding"},
+    {"id": "grooming-brush", "name": "Slicker brush", "tag": "Grooming", "what": "A fine-wire brush that lifts loose undercoat and small tangles.", "why": "Regular brushing means less shedding, fewer hairballs, and early discovery of skin trouble.", "order": "Every other day, after exercise when they're relaxed.", "caution": "Light pressure — the wires can scratch skin if you dig.", "categoryID": "grooming"},
+    {"id": "flea-treatment", "name": "Flea & tick treatment", "tag": "Health", "what": "A monthly spot-on or chewable parasite preventative.", "why": "Prevention is far cheaper and kinder than treating an infestation or tick-borne illness.", "order": "Same date every month — pair it with your Saturday check.", "caution": "Dose by species and weight — dog products can be toxic to cats. Ask your vet before switching.", "categoryID": "health"}
+  ]
+}

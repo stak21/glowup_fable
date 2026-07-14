@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "id": "cleaning",
+  "name": "Home & Cleaning",
+  "emoji": "🧹",
+  "tagline": "Little and often beats the weekend panic-clean.",
+  "accentTheme": "lavender",
+  "categories": [
+    {"id": "tidy", "name": "Tidy", "emoji": "🧺", "sortRank": 0},
+    {"id": "surfaces", "name": "Surfaces", "emoji": "🧽", "sortRank": 1},
+    {"id": "floors", "name": "Floors", "emoji": "🧹", "sortRank": 2},
+    {"id": "laundry", "name": "Laundry", "emoji": "👕", "sortRank": 3},
+    {"id": "deep", "name": "Deep clean", "emoji": "🪣", "sortRank": 4}
+  ],
+  "coreCategoryIDs": ["tidy"],
+  "waitRules": [
+    {"keyword": "soak", "minutes": 15},
+    {"keyword": "spray", "minutes": 5}
+  ],
+  "cadenceRules": [
+    {"categoryID": "floors", "cadence": {"kind": "everyOtherDay"}},
+    {"categoryID": "laundry", "cadence": {"kind": "days", "days": [6]}},
+    {"categoryID": "deep", "cadence": {"kind": "days", "days": [0, 6]}}
+  ],
+  "templates": [
+    {
+      "id": "daily-reset",
+      "title": "The Daily Reset",
+      "blurb": "Two ten-minute loops that keep the house permanently 'good enough for guests'.",
+      "routines": [
+        {
+          "title": "Morning tidy",
+          "emoji": "☀️",
+          "theme": "gold",
+          "days": [0, 1, 2, 3, 4, 5, 6],
+          "steps": [
+            {"label": "Make the bed", "categoryID": "tidy", "note": "The room is 80% tidier instantly"},
+            {"label": "Empty the dish rack / dishwasher", "categoryID": "tidy"},
+            {"label": "Wipe kitchen counters", "categoryID": "surfaces", "productID": "all-purpose-spray"}
+          ]
+        },
+        {
+          "title": "Evening reset",
+          "emoji": "🌙",
+          "theme": "lavender",
+          "days": [0, 1, 2, 3, 4, 5, 6],
+          "photoAreaID": "home",
+          "steps": [
+            {"label": "Ten-minute pickup — everything back home", "categoryID": "tidy", "note": "Set a timer, race it"},
+            {"label": "Spray and wipe the kitchen", "categoryID": "surfaces", "waitMinutes": 5, "productID": "all-purpose-spray", "note": "Spray first, let it sit while you tidy"},
+            {"label": "Quick sweep of the busy floors", "categoryID": "floors", "cadence": {"kind": "everyOtherDay"}}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "weekend-deep",
+      "title": "Weekend Deep Clean",
+      "blurb": "One focused Saturday session for the jobs the daily loop doesn't touch.",
+      "routines": [
+        {
+          "title": "Saturday blitz",
+          "emoji": "🪣",
+          "theme": "coral",
+          "days": [6],
+          "photoAreaID": "home",
+          "footer": "Never mix bleach with ammonia or vinegar — the fumes are dangerous.",
+          "steps": [
+            {"label": "Spray the bathroom and let it soak", "categoryID": "deep", "waitMinutes": 15, "note": "Dwell time does the scrubbing for you"},
+            {"label": "Scrub bathroom — top to bottom", "categoryID": "deep", "productID": "microfiber-cloths"},
+            {"label": "Vacuum every room", "categoryID": "floors"},
+            {"label": "Mop hard floors", "categoryID": "floors"},
+            {"label": "Laundry — wash, dry, actually fold", "categoryID": "laundry"}
+          ]
+        }
+      ]
+    }
+  ],
+  "quiz": {
+    "questions": [
+      {
+        "prompt": "What does home look like right now?",
+        "options": [
+          {"emoji": "😅", "title": "Chaos, honestly", "templateVotes": {"daily-reset": 2}},
+          {"emoji": "🙂", "title": "Fine until you open a cupboard", "templateVotes": {"daily-reset": 1, "weekend-deep": 1}},
+          {"emoji": "✨", "title": "Tidy — I want to keep it that way", "templateVotes": {"weekend-deep": 2}}
+        ]
+      },
+      {
+        "prompt": "When do you actually have energy to clean?",
+        "options": [
+          {"emoji": "⏱️", "title": "Ten minutes here and there", "templateVotes": {"daily-reset": 2}},
+          {"emoji": "📅", "title": "One big weekend block", "templateVotes": {"weekend-deep": 2}},
+          {"emoji": "🤷", "title": "Depends on the week", "templateVotes": {"daily-reset": 1, "weekend-deep": 1}}
+        ]
+      },
+      {
+        "prompt": "What bugs you most?",
+        "options": [
+          {"emoji": "🧸", "title": "Stuff everywhere", "templateVotes": {"daily-reset": 2}},
+          {"emoji": "🚿", "title": "Grime in kitchen and bath", "templateVotes": {"weekend-deep": 2}},
+          {"emoji": "🧺", "title": "The laundry mountain", "templateVotes": {"daily-reset": 1, "weekend-deep": 1}}
+        ]
+      }
+    ]
+  },
+  "educationPages": [
+    {"title": "Dwell time", "emoji": "🧴", "body": "Cleaners need contact time to work — spray, walk away for five minutes, then wipe. Half the scrubbing you do is just compensating for wiping too soon."},
+    {"title": "Top to bottom", "emoji": "🧹", "body": "Dust falls. Clean shelves before counters, counters before floors, and you'll never re-clean the same surface twice in one session."},
+    {"title": "Little and often", "emoji": "🧺", "body": "A ten-minute daily reset prevents the four-hour weekend ordeal. Mess grows exponentially — the cheapest time to clean anything is right now, while it's small."},
+    {"title": "Never mix chemicals", "emoji": "⚠️", "body": "Bleach plus ammonia (many glass cleaners) or bleach plus vinegar makes toxic gas. One product at a time, rinse between products, and keep the window open."}
+  ],
+  "photoAreas": [
+    {"id": "home", "title": "Home", "emoji": "🏠"}
+  ],
+  "products": [
+    {"id": "microfiber-cloths", "name": "Microfiber cloths", "tag": "Surfaces", "what": "Washable cloths whose split fibers grab dust and grease instead of pushing them around.", "why": "One damp microfiber replaces most paper towels and half your sprays.", "order": "Everywhere — colour-code them: kitchen, bath, glass.", "categoryID": "surfaces"},
+    {"id": "all-purpose-spray", "name": "All-purpose cleaner", "tag": "Daily spray", "what": "A neutral cleaner safe for most sealed surfaces.", "why": "One bottle for counters, tables and spills keeps the daily loop simple.", "order": "Spray, wait five minutes, wipe.", "caution": "Never combine with bleach or other cleaners; test delicate surfaces first.", "categoryID": "surfaces"},
+    {"id": "squeegee", "name": "Shower squeegee", "tag": "Prevention", "what": "A rubber blade that pulls water off glass and tile.", "why": "Thirty seconds after each shower prevents the limescale you'd otherwise scrub for an hour.", "order": "Last step of every shower — hang it in the stall.", "categoryID": "deep"}
+  ]
+}

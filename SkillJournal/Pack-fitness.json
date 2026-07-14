@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "id": "fitness",
+  "name": "Fitness",
+  "emoji": "🏋️",
+  "tagline": "Show up small, show up often — strength follows.",
+  "accentTheme": "gold",
+  "categories": [
+    {"id": "warmup", "name": "Warm-up", "emoji": "🔥", "sortRank": 0},
+    {"id": "strength", "name": "Strength", "emoji": "🏋️", "sortRank": 1},
+    {"id": "cardio", "name": "Cardio", "emoji": "🏃", "sortRank": 2},
+    {"id": "mobility", "name": "Mobility", "emoji": "🧘", "sortRank": 3},
+    {"id": "recovery", "name": "Recovery", "emoji": "🛌", "sortRank": 4}
+  ],
+  "coreCategoryIDs": ["warmup", "mobility"],
+  "waitRules": [
+    {"categoryID": "strength", "minutes": 3}
+  ],
+  "cadenceRules": [
+    {"categoryID": "strength", "cadence": {"kind": "everyOtherDay"}},
+    {"keyword": "long run", "cadence": {"kind": "days", "days": [6]}}
+  ],
+  "templates": [
+    {
+      "id": "beginner-full-body",
+      "title": "Beginner Full Body",
+      "blurb": "Three workout days, four recovery days — the schedule beginners actually stick to.",
+      "routines": [
+        {
+          "title": "Workout days",
+          "emoji": "💪",
+          "theme": "gold",
+          "days": [1, 3, 5],
+          "photoAreaID": "physique",
+          "footer": "Form beats weight — add load only when every rep looks clean.",
+          "steps": [
+            {"label": "Five-minute brisk walk or jacks", "categoryID": "warmup"},
+            {"label": "Squats — 3 sets of 10", "categoryID": "strength", "waitMinutes": 2},
+            {"label": "Push-ups — 3 sets of 8", "categoryID": "strength", "waitMinutes": 2, "note": "Knees down is still a push-up"},
+            {"label": "Plank — 3 × 30 seconds", "categoryID": "strength", "waitMinutes": 1},
+            {"label": "Cool-down stretch", "categoryID": "mobility", "productID": "yoga-mat"}
+          ]
+        },
+        {
+          "title": "Rest & recover",
+          "emoji": "🧘",
+          "theme": "lavender",
+          "days": [0, 2, 4, 6],
+          "steps": [
+            {"label": "Ten-minute easy walk", "categoryID": "cardio"},
+            {"label": "Full-body stretch", "categoryID": "mobility", "productID": "yoga-mat"},
+            {"label": "Foam roll the tight spots", "categoryID": "recovery", "cadence": {"kind": "everyOtherDay"}, "productID": "foam-roller"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "runner-base",
+      "title": "Runner's Base Builder",
+      "blurb": "Easy miles most days, one long run a week — the boring plan that builds engines.",
+      "routines": [
+        {
+          "title": "Run days",
+          "emoji": "🏃",
+          "theme": "coral",
+          "days": [1, 3, 6],
+          "footer": "Easy means conversational pace — if you can't talk, slow down.",
+          "steps": [
+            {"label": "Dynamic warm-up — leg swings, high knees", "categoryID": "warmup"},
+            {"label": "Easy run, 20–30 minutes", "categoryID": "cardio"},
+            {"label": "Long run — add 5 minutes each week", "categoryID": "cardio", "cadence": {"kind": "days", "days": [6]}},
+            {"label": "Post-run stretch — calves and hips", "categoryID": "mobility"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "desk-mobility",
+      "title": "Desk Worker Reset",
+      "blurb": "Ten daily minutes that undo eight seated hours — no equipment, no gym.",
+      "routines": [
+        {
+          "title": "Daily reset",
+          "emoji": "🧘",
+          "theme": "green",
+          "days": [0, 1, 2, 3, 4, 5, 6],
+          "steps": [
+            {"label": "Neck rolls and shoulder circles", "categoryID": "mobility"},
+            {"label": "Hip flexor stretch — 1 minute each side", "categoryID": "mobility"},
+            {"label": "Band pull-aparts — 2 sets of 15", "categoryID": "strength", "productID": "resistance-bands"},
+            {"label": "Ten-minute walk outside", "categoryID": "cardio"}
+          ]
+        }
+      ]
+    }
+  ],
+  "quiz": {
+    "questions": [
+      {
+        "prompt": "What are you after?",
+        "options": [
+          {"emoji": "💪", "title": "Getting stronger", "templateVotes": {"beginner-full-body": 2}},
+          {"emoji": "🏃", "title": "Running further", "templateVotes": {"runner-base": 2}},
+          {"emoji": "🧘", "title": "Moving without aches", "templateVotes": {"desk-mobility": 2}}
+        ]
+      },
+      {
+        "prompt": "What equipment do you have?",
+        "options": [
+          {"emoji": "🙌", "title": "Just me and the floor", "templateVotes": {"desk-mobility": 1, "beginner-full-body": 1}},
+          {"emoji": "👟", "title": "Good shoes and outside", "templateVotes": {"runner-base": 2}},
+          {"emoji": "🏠", "title": "Bands, mat, some weights", "templateVotes": {"beginner-full-body": 1}}
+        ]
+      },
+      {
+        "prompt": "Honestly — how many days a week will you show up?",
+        "options": [
+          {"emoji": "✌️", "title": "Two or three", "templateVotes": {"beginner-full-body": 1, "runner-base": 1}},
+          {"emoji": "🖐️", "title": "Most days", "templateVotes": {"desk-mobility": 1, "beginner-full-body": 1}},
+          {"emoji": "❓", "title": "That's the part I struggle with", "subtitle": "Start tiny — daily beats perfect", "templateVotes": {"desk-mobility": 2}}
+        ]
+      }
+    ]
+  },
+  "educationPages": [
+    {"title": "Warm up, always", "emoji": "🔥", "body": "Five minutes of easy movement raises muscle temperature and tells your joints what's coming. It's the cheapest injury insurance there is — never lift or run completely cold."},
+    {"title": "Progressive overload", "emoji": "📈", "body": "Muscles adapt to what you ask of them, then stop. Add a rep, a little weight, or a few minutes each week — tiny consistent increases are the entire secret."},
+    {"title": "Rest days build muscle", "emoji": "🛌", "body": "Training is the stimulus; growth happens while you recover. Back-to-back hard days on the same muscles just digs a hole. Sleep is the most anabolic thing you do all day."},
+    {"title": "Soreness vs. pain", "emoji": "⚠️", "body": "Dull, symmetrical next-day soreness is normal. Sharp pain, joint pain, or anything one-sided that changes how you move is not — stop and see a physio or doctor rather than pushing through."}
+  ],
+  "photoAreas": [
+    {"id": "physique", "title": "Physique", "emoji": "💪"}
+  ],
+  "products": [
+    {"id": "yoga-mat", "name": "Exercise mat", "tag": "Mobility basics", "what": "A grippy cushioned mat for floor work.", "why": "You'll stretch twice as long when your knees and spine aren't on hard floor.", "order": "Under every stretch, plank and floor exercise.", "categoryID": "mobility"},
+    {"id": "resistance-bands", "name": "Resistance band set", "tag": "Strength anywhere", "what": "Loop bands in a few tensions.", "why": "A full strength stimulus that fits in a drawer — perfect for desk resets and travel.", "order": "For pull-aparts, rows and assistance work.", "categoryID": "strength"},
+    {"id": "foam-roller", "name": "Foam roller", "tag": "Recovery", "what": "A firm foam cylinder for self-massage.", "why": "Eases the tight spots that make you skip tomorrow's session.", "order": "On recovery days, slow passes over calves, quads and upper back.", "caution": "Roll muscle, not joints or your lower spine.", "categoryID": "recovery"}
+  ]
+}

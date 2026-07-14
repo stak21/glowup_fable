@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "id": "nootropics",
+  "name": "Nootropics & Focus",
+  "emoji": "🧠",
+  "tagline": "Sleep, water and sunlight first — supplements are the last 10%.",
+  "accentTheme": "rose",
+  "categories": [
+    {"id": "hydration", "name": "Hydration", "emoji": "💧", "sortRank": 0},
+    {"id": "supplements", "name": "Supplements", "emoji": "💊", "sortRank": 1},
+    {"id": "focus-work", "name": "Focus", "emoji": "🧠", "sortRank": 2},
+    {"id": "winddown", "name": "Wind-down", "emoji": "🌙", "sortRank": 3}
+  ],
+  "coreCategoryIDs": ["hydration"],
+  "waitRules": [
+    {"keyword": "empty stomach", "minutes": 30}
+  ],
+  "cadenceRules": [
+    {"keyword": "caffeine", "cadence": {"kind": "days", "days": [1, 2, 3, 4, 5]}},
+    {"keyword": "coffee", "cadence": {"kind": "days", "days": [1, 2, 3, 4, 5]}}
+  ],
+  "templates": [
+    {
+      "id": "gentle-start",
+      "title": "Gentle Start Stack",
+      "blurb": "The evidence-first basics: hydration, omega-3, caffeine done right, and real wind-down.",
+      "routines": [
+        {
+          "title": "Morning stack",
+          "emoji": "☀️",
+          "theme": "gold",
+          "days": [0, 1, 2, 3, 4, 5, 6],
+          "footer": "Add one supplement at a time and give it two weeks — and ask a pharmacist about interactions with any medication you take.",
+          "steps": [
+            {"label": "Big glass of water before anything", "categoryID": "hydration", "note": "You wake up mildly dehydrated — fix that first"},
+            {"label": "Omega-3 with breakfast", "categoryID": "supplements", "productID": "omega-3", "note": "With food — it's fat-soluble"},
+            {"label": "Coffee + L-theanine", "categoryID": "focus-work", "cadence": {"kind": "days", "days": [1, 2, 3, 4, 5]}, "productID": "l-theanine", "note": "Weekdays only — weekends keep tolerance low"},
+            {"label": "Ten-minute deep-work warmup", "categoryID": "focus-work", "note": "One small task, no phone — momentum is the real nootropic"}
+          ]
+        },
+        {
+          "title": "Wind-down",
+          "emoji": "🌙",
+          "theme": "lavender",
+          "days": [0, 1, 2, 3, 4, 5, 6],
+          "footer": "Supplements aren't a substitute for sleep — the stack only works on top of 7+ hours.",
+          "steps": [
+            {"label": "Screens off, lights low", "categoryID": "winddown", "note": "30 minutes before bed"},
+            {"label": "Magnesium glycinate", "categoryID": "supplements", "productID": "magnesium-glycinate"},
+            {"label": "Five minutes of slow breathing", "categoryID": "winddown", "note": "In for 4, out for 6"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "focus-sprint",
+      "title": "Deep Focus Days",
+      "blurb": "A weekday protocol built around protected focus blocks, with supplements in a supporting role.",
+      "routines": [
+        {
+          "title": "Focus protocol",
+          "emoji": "🧠",
+          "theme": "rose",
+          "days": [1, 2, 3, 4, 5],
+          "footer": "If you're pregnant, or on any medication — especially for blood pressure, mood or sleep — check with a doctor before adding supplements.",
+          "steps": [
+            {"label": "Water + a pinch of electrolytes", "categoryID": "hydration"},
+            {"label": "Caffeine + L-theanine", "categoryID": "focus-work", "cadence": {"kind": "days", "days": [1, 2, 3, 4, 5]}, "productID": "l-theanine"},
+            {"label": "90-minute deep work block", "categoryID": "focus-work", "note": "Phone in another room; one task"},
+            {"label": "Midday walk, no podcast", "categoryID": "winddown", "note": "Boredom is where ideas surface"},
+            {"label": "Creatine, any time of day", "categoryID": "supplements", "productID": "creatine"}
+          ]
+        }
+      ]
+    }
+  ],
+  "quiz": {
+    "questions": [
+      {
+        "prompt": "What are you hoping to improve?",
+        "options": [
+          {"emoji": "🧠", "title": "Focus during work", "templateVotes": {"focus-sprint": 2}},
+          {"emoji": "😴", "title": "Sleep and calm", "templateVotes": {"gentle-start": 2}},
+          {"emoji": "🌱", "title": "General wellbeing", "templateVotes": {"gentle-start": 1}}
+        ]
+      },
+      {
+        "prompt": "How's your caffeine relationship?",
+        "options": [
+          {"emoji": "☕", "title": "Several cups, all day", "subtitle": "A schedule will help more than more caffeine", "templateVotes": {"gentle-start": 1, "focus-sprint": 1}},
+          {"emoji": "🙂", "title": "One or two, mornings", "templateVotes": {"focus-sprint": 1}},
+          {"emoji": "🫖", "title": "Little or none", "templateVotes": {"gentle-start": 1}}
+        ]
+      },
+      {
+        "prompt": "Experience with supplements?",
+        "options": [
+          {"emoji": "🆕", "title": "None — starting fresh", "templateVotes": {"gentle-start": 2}},
+          {"emoji": "💊", "title": "A few basics already", "templateVotes": {"gentle-start": 1, "focus-sprint": 1}},
+          {"emoji": "🧪", "title": "I've tried a lot", "subtitle": "Structure beats novelty", "templateVotes": {"focus-sprint": 2}}
+        ]
+      }
+    ]
+  },
+  "educationPages": [
+    {"title": "Start low, go slow", "emoji": "🐢", "body": "Add one thing at a time and hold it for two weeks before judging or adding more. Change three variables at once and you'll never know what helped — or what caused the headache."},
+    {"title": "Sleep is the stack", "emoji": "🛌", "body": "No supplement recovers the focus lost to a short night. If you're sleeping under seven hours, spend your effort there first — everything on top of good sleep works better."},
+    {"title": "Interactions are real", "emoji": "⚠️", "body": "Supplements can interact with prescription medication — St. John's Wort famously breaks several. A pharmacist can check your exact combination in minutes, for free. This app can't, so please ask one."},
+    {"title": "Evidence varies wildly", "emoji": "🔬", "body": "Creatine and caffeine+theanine have solid research; many trendier compounds have almost none. Be suspicious of anything promising limitless effects, and buy from brands that publish third-party testing."}
+  ],
+  "products": [
+    {"id": "l-theanine", "name": "L-theanine", "tag": "With caffeine", "what": "An amino acid from tea that smooths caffeine's edge.", "why": "Paired with coffee it keeps the alertness and drops most of the jitter — the best-evidenced beginner combo.", "order": "With your morning coffee, weekdays.", "caution": "Generally well tolerated. Check with a doctor if pregnant or on blood-pressure medication. Follow the label dose.", "categoryID": "supplements"},
+    {"id": "magnesium-glycinate", "name": "Magnesium glycinate", "tag": "Evening", "what": "A gentle, well-absorbed form of magnesium.", "why": "Supports muscle relaxation and sleep quality; glycinate is the form least likely to upset your stomach.", "order": "With your wind-down, 30–60 minutes before bed.", "caution": "High doses can upset digestion — stay at the label dose. Ask a doctor first if you have kidney problems.", "categoryID": "supplements"},
+    {"id": "omega-3", "name": "Omega-3 (EPA/DHA)", "tag": "Foundation", "what": "Fish or algae oil capsules.", "why": "Broad, well-researched support for brain and heart health — a foundation, not a quick fix.", "order": "With breakfast — it absorbs with fat.", "caution": "Talk to a doctor before combining with blood thinners.", "categoryID": "supplements"},
+    {"id": "creatine", "name": "Creatine monohydrate", "tag": "Body & brain", "what": "The most-studied sports supplement; plain monohydrate powder.", "why": "Strong evidence for physical performance and growing evidence for cognition, especially when sleep-deprived.", "order": "Any time of day, consistently — daily matters more than timing.", "caution": "Drink extra water. Ask a doctor first if you have kidney issues. Skip 'loading phases' — the label dose is enough.", "categoryID": "supplements"}
+  ]
+}

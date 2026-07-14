@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "id": "gardening",
+  "name": "Gardening",
+  "emoji": "🌱",
+  "tagline": "Happy plants, one small check-in at a time.",
+  "accentTheme": "green",
+  "categories": [
+    {"id": "inspect", "name": "Inspect", "emoji": "🔍", "sortRank": 0},
+    {"id": "watering", "name": "Watering", "emoji": "💧", "sortRank": 1},
+    {"id": "feeding", "name": "Feeding", "emoji": "🌿", "sortRank": 2},
+    {"id": "pruning", "name": "Pruning", "emoji": "✂️", "sortRank": 3},
+    {"id": "pestcare", "name": "Pest care", "emoji": "🐛", "sortRank": 4}
+  ],
+  "coreCategoryIDs": ["inspect", "watering"],
+  "waitRules": [
+    {"keyword": "deep water", "minutes": 20}
+  ],
+  "cadenceRules": [
+    {"categoryID": "feeding", "cadence": {"kind": "days", "days": [6]}},
+    {"keyword": "mist", "cadence": {"kind": "everyOtherDay"}},
+    {"categoryID": "pruning", "cadence": {"kind": "days", "days": [0]}}
+  ],
+  "templates": [
+    {
+      "id": "houseplant-basics",
+      "title": "Houseplant Care",
+      "blurb": "A five-minute daily check-in that keeps indoor plants thriving year round.",
+      "routines": [
+        {
+          "title": "Plant check-in",
+          "emoji": "🪴",
+          "theme": "green",
+          "days": [0, 1, 2, 3, 4, 5, 6],
+          "photoAreaID": "plants",
+          "steps": [
+            {"label": "Check soil moisture with a finger", "categoryID": "inspect", "note": "Top inch dry = time to water"},
+            {"label": "Water thirsty plants", "categoryID": "watering", "cadence": {"kind": "everyOtherDay"}, "productID": "watering-can"},
+            {"label": "Mist the humidity lovers", "categoryID": "watering", "cadence": {"kind": "everyOtherDay"}},
+            {"label": "Rotate pots a quarter turn", "categoryID": "inspect", "cadence": {"kind": "days", "days": [0]}, "note": "Even light, even growth"},
+            {"label": "Feed with liquid fertilizer", "categoryID": "feeding", "cadence": {"kind": "days", "days": [6]}, "productID": "liquid-fertilizer", "note": "Growing season only"}
+          ]
+        }
+      ]
+    },
+    {
+      "id": "veggie-patch",
+      "title": "Veggie Patch Starter",
+      "blurb": "Morning walks and weekend care sessions that turn beds into harvests.",
+      "routines": [
+        {
+          "title": "Morning garden walk",
+          "emoji": "☀️",
+          "theme": "gold",
+          "days": [0, 1, 2, 3, 4, 5, 6],
+          "photoAreaID": "garden",
+          "steps": [
+            {"label": "Walk the beds and look for changes", "categoryID": "inspect"},
+            {"label": "Water at the roots, not the leaves", "categoryID": "watering", "note": "Morning watering beats evaporation"},
+            {"label": "Check leaf undersides for pests", "categoryID": "pestcare", "cadence": {"kind": "everyOtherDay"}, "productID": "neem-oil"}
+          ]
+        },
+        {
+          "title": "Weekend deep care",
+          "emoji": "🌻",
+          "theme": "green",
+          "days": [0, 6],
+          "footer": "Skip feeding in a heatwave — stressed plants can't use it.",
+          "steps": [
+            {"label": "Weed the beds", "categoryID": "inspect"},
+            {"label": "Deep water everything", "categoryID": "watering", "waitMinutes": 20},
+            {"label": "Feed the heavy feeders", "categoryID": "feeding", "productID": "liquid-fertilizer"},
+            {"label": "Prune, deadhead and harvest", "categoryID": "pruning", "productID": "pruning-shears"}
+          ]
+        }
+      ]
+    }
+  ],
+  "quiz": {
+    "questions": [
+      {
+        "prompt": "Where does your garden live?",
+        "options": [
+          {"emoji": "🪴", "title": "Indoors, on shelves and sills", "templateVotes": {"houseplant-basics": 2}},
+          {"emoji": "🌱", "title": "Outdoor beds or a balcony", "templateVotes": {"veggie-patch": 2}},
+          {"emoji": "🌿", "title": "A bit of both", "templateVotes": {"houseplant-basics": 1, "veggie-patch": 1}}
+        ]
+      },
+      {
+        "prompt": "How much time can you give it most days?",
+        "options": [
+          {"emoji": "⏱️", "title": "Five minutes", "templateVotes": {"houseplant-basics": 2}},
+          {"emoji": "🕰️", "title": "Fifteen to thirty", "templateVotes": {"veggie-patch": 1, "houseplant-basics": 1}},
+          {"emoji": "🧑‍🌾", "title": "As long as it takes", "templateVotes": {"veggie-patch": 2}}
+        ]
+      },
+      {
+        "prompt": "What's the dream?",
+        "options": [
+          {"emoji": "😌", "title": "Green, thriving company", "templateVotes": {"houseplant-basics": 2}},
+          {"emoji": "🍅", "title": "Things I can actually eat", "templateVotes": {"veggie-patch": 2}},
+          {"emoji": "📸", "title": "A jungle worth photographing", "templateVotes": {"houseplant-basics": 1, "veggie-patch": 1}}
+        ]
+      }
+    ]
+  },
+  "educationPages": [
+    {"title": "Light first", "emoji": "☀️", "body": "Light is the one thing you can't fertilize your way around. Match the plant to the window — south-facing is bright, north is gentle — and most 'mystery' problems disappear. A struggling plant usually wants a better spot, not more water."},
+    {"title": "The finger test", "emoji": "💧", "body": "Overwatering kills more plants than drought. Push a finger an inch into the soil: dry means water, damp means wait. Pots must drain — roots sitting in water rot quietly."},
+    {"title": "Feed in season", "emoji": "🌿", "body": "Fertilizer is a boost, not food for the hungry. Feed lightly during spring and summer growth, and stop almost entirely in winter when plants rest. More is not better — it burns roots."},
+    {"title": "Catch pests early", "emoji": "🐛", "body": "Check leaf undersides once in a while — that's where trouble starts. A weekly wipe and early neem treatment beats fighting an infestation later. Quarantine new plants for a week before they join the others."}
+  ],
+  "photoAreas": [
+    {"id": "plants", "title": "Plants", "emoji": "🪴"},
+    {"id": "garden", "title": "Garden", "emoji": "🌻"}
+  ],
+  "products": [
+    {"id": "watering-can", "name": "Long-spout watering can", "tag": "Watering basics", "what": "A can with a narrow, long spout for reaching soil under the leaves.", "why": "Watering at the roots keeps foliage dry, which prevents most fungal problems.", "order": "Use whenever the finger test says the soil is dry.", "categoryID": "watering"},
+    {"id": "liquid-fertilizer", "name": "Balanced liquid fertilizer", "tag": "Feeding", "what": "An all-purpose liquid feed you dilute into your watering can.", "why": "Container plants exhaust their soil — a light feed in the growing season keeps them going.", "order": "After watering, on feeding day.", "caution": "Follow the label dilution — double-strength burns roots. Skip feeding in winter.", "categoryID": "feeding"},
+    {"id": "neem-oil", "name": "Neem oil spray", "tag": "Pest care", "what": "A plant-based oil spray that disrupts common pests like aphids and spider mites.", "why": "Gentle enough for regular use and safe around edibles when used as directed.", "order": "Spray in the evening when you spot pests — never in direct midday sun.", "caution": "Can burn leaves if applied in strong sunlight; test one leaf first.", "categoryID": "pestcare"},
+    {"id": "pruning-shears", "name": "Bypass pruning shears", "tag": "Pruning", "what": "Sharp scissors-action shears that cut stems cleanly instead of crushing them.", "why": "Clean cuts heal fast; crushed stems invite disease.", "order": "For deadheading, harvesting and shaping on your weekend session.", "caution": "Wipe blades between plants to avoid spreading disease.", "categoryID": "pruning"}
+  ]
+}
